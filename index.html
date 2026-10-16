@@ -36,6 +36,7 @@ input:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid var(-
   flex:1 1 0;min-width:72px;padding:13px 10px;font:inherit;font-weight:700;color:var(--ink);
   background:var(--chip);border:2px solid transparent;border-radius:14px;cursor:pointer;
 }
+#genres .chip{flex:0 0 auto;min-width:0;padding:10px 14px}
 .chip[aria-pressed="true"]{background:var(--sakura);color:var(--sakura-ink)}
 .go{
   width:100%;margin-top:14px;padding:16px;font:inherit;font-weight:800;font-size:1.05rem;
@@ -87,6 +88,9 @@ a.link{display:inline-block;margin-top:14px;color:var(--ink);font-weight:700}
       <button class="chip" data-v="120" aria-pressed="false">2 hours</button>
     </div>
 
+    <div class="q">Genre</div>
+    <div class="row" id="genres"></div>
+
     <button class="go" id="pickBtn">Pick for me</button>
   </section>
 
@@ -96,7 +100,23 @@ a.link{display:inline-block;margin-top:14px;color:var(--ink);font-weight:700}
 <script>
 const $ = s => document.querySelector(s);
 const MIN_PER_CHAPTER = 6; // rough guess for reading speed
-const state = { user: "", kind: "BOTH", time: 30, items: [], skipped: new Set() };
+const state = { user: "", kind: "BOTH", time: 30, genre: "ALL", items: [], skipped: new Set() };
+
+// Build genre chips from the genres that actually appear in the user's list.
+function buildGenres(){
+  state.genre = "ALL";
+  const counts = new Map();
+  for(const e of state.items) for(const g of e.media.genres || []) counts.set(g, (counts.get(g) || 0) + 1);
+  const names = ["ALL", ...[...counts.entries()].sort((a,b) => b[1] - a[1]).map(x => x[0])];
+  const row = $("#genres");
+  row.replaceChildren(...names.map(g => {
+    const b = document.createElement("button");
+    b.className = "chip"; b.dataset.v = g;
+    b.setAttribute("aria-pressed", String(g === "ALL"));
+    b.textContent = g === "ALL" ? "Any" : g;
+    return b;
+  }));
+}
 
 const QUERY = `
 query($u:String){
@@ -105,7 +125,7 @@ query($u:String){
 }
 fragment M on Media{
   id type siteUrl title{romaji english} coverImage{extraLarge large}
-  episodes chapters duration averageScore nextAiringEpisode{episode}
+  episodes chapters duration averageScore genres nextAiringEpisode{episode}
 }`;
 
 function msg(text){
@@ -135,6 +155,7 @@ async function loadList(user){
     }
     state.items = [...seen.values()];
     state.user = user;
+    buildGenres();
     localStorage.setItem("wn_user", user);
     $("#whoName").textContent = "Signed in as " + user;
     $("#setup").hidden = true; $("#app").hidden = false;
@@ -171,6 +192,7 @@ function pick(){
   const cands = [];
   for(const e of state.items){
     if(state.kind !== "BOTH" && e.media.type !== state.kind) continue;
+    if(state.genre !== "ALL" && !(e.media.genres || []).includes(state.genre)) continue;
     const p = plan(e);
     if(!p) continue;
     const base = e.status === "PLANNING" ? 50 : e.status === "REPEATING" ? 40 : 100;
@@ -179,7 +201,7 @@ function pick(){
   if(!cands.length){
     return msg(state.kind === "ANIME"
       ? "Nothing to watch fits that time. You're caught up, or the episodes are longer than your time."
-      : "Nothing matches. Try a different time or switch to Either.");
+      : "Nothing matches. Try a different time, genre, or switch to Either.");
   }
   let pool = cands.filter(c => !state.skipped.has(c.e.media.id));
   if(!pool.length){ state.skipped.clear(); pool = cands; }
@@ -214,7 +236,7 @@ function wireChips(id, key){
     state.skipped.clear(); pick();
   });
 }
-wireChips("#kinds", "kind"); wireChips("#times", "time");
+wireChips("#kinds", "kind"); wireChips("#times", "time"); wireChips("#genres", "genre");
 
 $("#load").onclick = () => { const u = $("#user").value.trim(); if(u) loadList(u); };
 $("#user").addEventListener("keydown", e => { if(e.key === "Enter") $("#load").click(); });
@@ -227,5 +249,4 @@ const saved = localStorage.getItem("wn_user");
 if(saved){ $("#user").value = saved; loadList(saved); }
 </script>
 </body>
-  </html>
-      
+</html>
