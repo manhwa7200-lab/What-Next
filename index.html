@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14172B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="What Next?">
+<title>What Next?</title>
+<style>
+:root{
+  --bg:#F5F3FB; --ink:#1B1D3A; --muted:#6A6C8C; --card:#FFFFFF; --line:#DAD7EC;
+  --sakura:#E8336D; --sakura-ink:#FFFFFF; --chip:#ECE9F8;
+}
+@media (prefers-color-scheme:dark){
+  :root{ --bg:#14172B; --ink:#F0EFFA; --muted:#A3A6C8; --card:#1E2240; --line:#32376275; --chip:#262B4D; --sakura:#FF5C8D; --sakura-ink:#1B0A12; }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font:16px/1.45 "Avenir Next","Segoe UI",system-ui,sans-serif;
+  padding:calc(env(safe-area-inset-top,0px) + 20px) 18px calc(env(safe-area-inset-bottom,0px) + 28px);
+}
+main{max-width:480px;margin:0 auto}
+h1{font-size:2.4rem;line-height:1;margin:4px 0 6px;letter-spacing:-.03em;font-weight:800}
+.sub{color:var(--muted);margin:0 0 22px}
+label,.q{display:block;font-weight:700;margin:20px 0 8px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+input{
+  width:100%;padding:14px 16px;font:inherit;color:var(--ink);background:var(--card);
+  border:2px solid var(--line);border-radius:14px;
+}
+input:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid var(--sakura);outline-offset:2px}
+.chip{
+  flex:1 1 0;min-width:72px;padding:13px 10px;font:inherit;font-weight:700;color:var(--ink);
+  background:var(--chip);border:2px solid transparent;border-radius:14px;cursor:pointer;
+}
+.chip[aria-pressed="true"]{background:var(--sakura);color:var(--sakura-ink)}
+.go{
+  width:100%;margin-top:14px;padding:16px;font:inherit;font-weight:800;font-size:1.05rem;
+  color:var(--sakura-ink);background:var(--sakura);border:0;border-radius:16px;cursor:pointer;
+}
+.go.alt{background:var(--chip);color:var(--ink)}
+.go:disabled{opacity:.6}
+#result{margin-top:26px}
+.pick{background:var(--card);border-radius:22px;overflow:hidden;border:2px solid var(--line)}
+.pick img{display:block;width:100%;aspect-ratio:3/2;object-fit:cover;object-position:top;background:var(--chip)}
+.pick .body{padding:16px 18px 18px}
+.kind{color:var(--muted);font-size:.9rem;margin:0}
+.pick h2{margin:2px 0 10px;font-size:1.5rem;line-height:1.15;letter-spacing:-.01em}
+.todo{font-size:1.25rem;font-weight:800;color:var(--sakura);margin:0}
+.meta{color:var(--muted);margin:4px 0 0}
+a.link{display:inline-block;margin-top:14px;color:var(--ink);font-weight:700}
+.msg{padding:14px 16px;border-radius:14px;background:var(--chip)}
+.who{display:flex;justify-content:space-between;align-items:center;color:var(--muted);margin-bottom:4px}
+.who button{background:none;border:0;color:var(--sakura);font:inherit;font-weight:700;cursor:pointer;padding:6px 0}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <h1>What next?</h1>
+  <p class="sub">Tell it how much time you have. It picks from your AniList.</p>
+
+  <section id="setup">
+    <label for="user">Your AniList username</label>
+    <input id="user" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="username">
+    <button class="go" id="load">Load my list</button>
+  </section>
+
+  <section id="app" hidden>
+    <div class="who"><span id="whoName"></span><button id="change">Change user</button></div>
+
+    <div class="q">I want to</div>
+    <div class="row" id="kinds">
+      <button class="chip" data-v="ANIME" aria-pressed="false">Watch</button>
+      <button class="chip" data-v="MANGA" aria-pressed="false">Read</button>
+      <button class="chip" data-v="BOTH" aria-pressed="true">Either</button>
+    </div>
+
+    <div class="q">I have</div>
+    <div class="row" id="times">
+      <button class="chip" data-v="15" aria-pressed="false">15 min</button>
+      <button class="chip" data-v="30" aria-pressed="true">30 min</button>
+      <button class="chip" data-v="60" aria-pressed="false">1 hour</button>
+      <button class="chip" data-v="120" aria-pressed="false">2 hours</button>
+    </div>
+
+    <button class="go" id="pickBtn">Pick for me</button>
+  </section>
+
+  <div id="result" aria-live="polite"></div>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const MIN_PER_CHAPTER = 6; // rough guess for reading speed
+const state = { user: "", kind: "BOTH", time: 30, items: [], skipped: new Set() };
+
+const QUERY = `
+query($u:String){
+  anime:MediaListCollection(userName:$u,type:ANIME,status_in:[CURRENT,REPEATING,PLANNING]){lists{entries{status progress media{...M}}}}
+  manga:MediaListCollection(userName:$u,type:MANGA,status_in:[CURRENT,REPEATING,PLANNING]){lists{entries{status progress media{...M}}}}
+}
+fragment M on Media{
+  id type siteUrl title{romaji english} coverImage{extraLarge large}
+  episodes chapters duration averageScore nextAiringEpisode{episode}
+}`;
+
+function msg(text){
+  const d = document.createElement("div");
+  d.className = "msg"; d.textContent = text;
+  $("#result").replaceChildren(d);
+}
+
+async function loadList(user){
+  $("#load").disabled = true;
+  msg("Loading your list…");
+  try{
+    const res = await fetch("https://graphql.anilist.co", {
+      method:"POST",
+      headers:{"Content-Type":"application/json","Accept":"application/json"},
+      body:JSON.stringify({query:QUERY, variables:{u:user}})
+    });
+    const json = await res.json();
+    if(json.errors && !json.data?.anime && !json.data?.manga){
+      throw new Error(res.status === 404 ? "User not found. Check the spelling of your username." : "AniList said: " + json.errors[0].message);
+    }
+    const seen = new Map();
+    for(const key of ["anime","manga"]){
+      for(const l of json.data[key]?.lists || []){
+        for(const e of l.entries){ if(!seen.has(e.media.id)) seen.set(e.media.id, e); }
+      }
+    }
+    state.items = [...seen.values()];
+    state.user = user;
+    localStorage.setItem("wn_user", user);
+    $("#whoName").textContent = "Signed in as " + user;
+    $("#setup").hidden = true; $("#app").hidden = false;
+    if(!state.items.length) return msg("Your lists have nothing in Watching, Reading, or Planning yet.");
+    $("#result").replaceChildren();
+    pick();
+  }catch(err){
+    msg(err.message.includes("Failed to fetch") ? "Couldn't reach AniList. Check your connection and try again." : err.message);
+  }finally{ $("#load").disabled = false; }
+}
+
+// Work out whether an entry fits the time you have, and what to do.
+function plan(e){
+  const m = e.media, isAnime = m.type === "ANIME";
+  const unit = isAnime ? (m.duration || 24) : MIN_PER_CHAPTER;
+  let available = isAnime
+    ? (m.nextAiringEpisode ? m.nextAiringEpisode.episode - 1 : (m.episodes || Infinity))
+    : (m.chapters || Infinity);
+  const left = available - e.progress;
+  if(left <= 0) return null;
+  const n = Math.min(Math.floor(state.time / unit), left, isAnime ? 8 : 30);
+  if(n < 1) return null;
+  const from = e.progress + 1, to = e.progress + n;
+  const range = n === 1 ? String(from) : from + "–" + to;
+  return {
+    isAnime, n, minutes: Math.round(n * unit),
+    action: (isAnime ? "Watch episode " : "Read chapter ") + range,
+    progress: e.progress, total: isAnime ? m.episodes : m.chapters
+  };
+}
+
+function pick(){
+  if(!state.items.length) return;
+  const cands = [];
+  for(const e of state.items){
+    if(state.kind !== "BOTH" && e.media.type !== state.kind) continue;
+    const p = plan(e);
+    if(!p) continue;
+    const base = e.status === "PLANNING" ? 50 : e.status === "REPEATING" ? 40 : 100;
+    cands.push({e, p, score: base + (e.media.averageScore || 60) / 2 + Math.random() * 30});
+  }
+  if(!cands.length){
+    return msg(state.kind === "ANIME"
+      ? "Nothing to watch fits that time. You're caught up, or the episodes are longer than your time."
+      : "Nothing matches. Try a different time or switch to Either.");
+  }
+  let pool = cands.filter(c => !state.skipped.has(c.e.media.id));
+  if(!pool.length){ state.skipped.clear(); pool = cands; }
+  pool.sort((a,b) => b.score - a.score);
+  show(pool[0]);
+}
+
+function show({e,p}){
+  const m = e.media, title = m.title.english || m.title.romaji;
+  const card = document.createElement("div"); card.className = "pick";
+  const img = new Image(); img.alt = ""; img.src = m.coverImage.extraLarge || m.coverImage.large;
+  const body = document.createElement("div"); body.className = "body";
+  const kind = document.createElement("p"); kind.className = "kind";
+  kind.textContent = (p.isAnime ? "Anime" : "Manga") + (e.status === "PLANNING" ? ", on your plan-to list" : "");
+  const h = document.createElement("h2"); h.textContent = title;
+  const todo = document.createElement("p"); todo.className = "todo"; todo.textContent = p.action;
+  const meta = document.createElement("p"); meta.className = "meta";
+  meta.textContent = "About " + p.minutes + " min" + (e.status === "PLANNING" ? "" : ". You're at " + p.progress + (p.total ? " of " + p.total : ""));
+  const a = document.createElement("a"); a.className = "link"; a.href = m.siteUrl; a.target = "_blank"; a.rel = "noopener"; a.textContent = "Open on AniList";
+  body.append(kind, h, todo, meta, a);
+  card.append(img, body);
+  const again = document.createElement("button"); again.className = "go alt"; again.textContent = "Show me another";
+  again.onclick = () => { state.skipped.add(m.id); pick(); };
+  $("#result").replaceChildren(card, again);
+}
+
+function wireChips(id, key){
+  $(id).addEventListener("click", ev => {
+    const b = ev.target.closest(".chip"); if(!b) return;
+    $(id).querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", String(c === b)));
+    state[key] = key === "time" ? Number(b.dataset.v) : b.dataset.v;
+    state.skipped.clear(); pick();
+  });
+}
+wireChips("#kinds", "kind"); wireChips("#times", "time");
+
+$("#load").onclick = () => { const u = $("#user").value.trim(); if(u) loadList(u); };
+$("#user").addEventListener("keydown", e => { if(e.key === "Enter") $("#load").click(); });
+$("#pickBtn").onclick = () => { state.skipped.clear(); pick(); };
+$("#change").onclick = () => {
+  $("#app").hidden = true; $("#setup").hidden = false; $("#result").replaceChildren(); $("#user").focus();
+};
+
+const saved = localStorage.getItem("wn_user");
+if(saved){ $("#user").value = saved; loadList(saved); }
+</script>
+</body>
+  </html>
+      
