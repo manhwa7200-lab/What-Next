@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#14172B">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="What Next?">
 <title>What Next?</title>
@@ -58,6 +60,10 @@ a.link{display:inline-block;margin-top:14px;color:var(--ink);font-weight:700}
 .who button{background:none;border:0;color:var(--sakura);font:inherit;font-weight:700;cursor:pointer;padding:6px 0}
 .tabs{position:fixed;left:0;right:0;bottom:0;display:flex;gap:8px;padding:10px 14px calc(env(safe-area-inset-bottom,0px) + 10px);background:var(--bg);border-top:2px solid var(--line);z-index:5}
 body{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 96px)}
+.tabs .chip{min-width:0;padding:12px 2px;font-size:.8rem}
+.bar{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:.9rem}
+.bar span{width:110px;flex:none}
+.bar i{display:block;height:12px;border-radius:6px;background:var(--sakura)}
 .filt{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:12px 16px;margin-top:6px}
 .filt summary{font-weight:700;cursor:pointer}
 .mini{padding:8px 12px;border:0;border-radius:12px;background:var(--chip);color:var(--ink);font:inherit;font-weight:700;cursor:pointer;margin:8px 8px 0 0}
@@ -88,6 +94,8 @@ select{width:100%;padding:13px 14px;font:inherit;color:var(--ink);background:var
   <div class="tabs" id="tabs" hidden>
     <button class="chip" data-v="pick" aria-pressed="true">Pick</button>
     <button class="chip" data-v="discover" aria-pressed="false">Discover</button>
+    <button class="chip" data-v="schedule" aria-pressed="false">Schedule</button>
+    <button class="chip" data-v="stats" aria-pressed="false">Stats</button>
     <button class="chip" data-v="more" aria-pressed="false">More</button>
   </div>
 
@@ -175,6 +183,15 @@ select{width:100%;padding:13px 14px;font:inherit;color:var(--ink);background:var
     <button class="go alt" id="dmore" hidden>Load more</button>
   </section>
 
+  <section id="schedule" hidden>
+    <div class="q">Airing soon from your list</div>
+    <div id="schedList"></div>
+  </section>
+
+  <section id="stats" hidden>
+    <div id="statsBody"></div>
+  </section>
+
   <section id="more" hidden>
     <div class="q">Privacy</div>
     <button class="chip" id="blurBtn" aria-pressed="false">Blur covers</button>
@@ -212,7 +229,7 @@ query($u:String){
 }
 fragment M on Media{
   id type siteUrl title{romaji english} coverImage{extraLarge large}
-  episodes chapters duration averageScore genres isAdult nextAiringEpisode{episode}
+  episodes chapters duration averageScore genres isAdult nextAiringEpisode{episode airingAt}
 }`;
 
 function msg(text){
@@ -235,6 +252,7 @@ async function loadList(user){
       }
     }
     state.items = [...seen.values()];
+    try{ localStorage.setItem("wn_cache", JSON.stringify(state.items)); }catch(_){}
     state.user = user;
     buildGenres();
     $("#whoName").textContent = "Signed in as " + user;
@@ -243,6 +261,13 @@ async function loadList(user){
     $("#result").replaceChildren();
     pick();
   }catch(err){
+    let cached = null;
+    try{ cached = JSON.parse(localStorage.getItem("wn_cache") || "null"); }catch(_){}
+    if(cached && cached.length && err.message.includes("Failed to fetch")){
+      state.items = cached; state.user = user; buildGenres();
+      $("#whoName").textContent = "Offline · showing your last saved list";
+      $("#setup").hidden = true; $("#app").hidden = false; $("#result").replaceChildren(); return pick();
+    }
     msg(err.message.includes("Failed to fetch") ? "Couldn't reach AniList. Check your connection and try again." : err.message);
   }
 }
@@ -353,12 +378,13 @@ $("#pickBtn").onclick = () => { state.skipped.clear(); pick(); };
 
 // ---------- Tabs and cover blur ----------
 function showTab(t){
-  $("#pickWrap").hidden = t !== "pick";
-  $("#discover").hidden = t !== "discover";
-  $("#more").hidden = t !== "more";
+  const ids = { pick: "#pickWrap", discover: "#discover", schedule: "#schedule", stats: "#stats", more: "#more" };
+  for(const k in ids) $(ids[k]).hidden = k !== t;
   document.querySelectorAll("#tabs .chip[data-v]").forEach(c => c.setAttribute("aria-pressed", String(c.dataset.v === t)));
   if(t === "more") $("#hideCount").textContent = hide.size ? hide.size + " hidden title(s)." : "No hidden titles.";
   if(t === "discover" && !$("#dlist").children.length) discover(false);
+  if(t === "schedule") renderSchedule();
+  if(t === "stats") renderStats();
   window.scrollTo(0, 0);
 }
 $("#tabs").addEventListener("click", ev => {
@@ -476,7 +502,7 @@ function syncAuthUI(){
   $("#whoBar").hidden = !on;
   $("#tabs").hidden = !on;
   $("#setup").hidden = on;
-  if(!on){ $("#app").hidden = true; $("#discover").hidden = true; $("#more").hidden = true; $("#pickWrap").hidden = false; }
+  if(!on){ $("#app").hidden = true; $("#discover").hidden = true; $("#more").hidden = true; $("#schedule").hidden = true; $("#stats").hidden = true; $("#pickWrap").hidden = false; }
 }
 function clearAuth(){
   auth.token = null;
@@ -502,6 +528,7 @@ async function markDone(e, p, btn){
     if(json.errors) throw new Error(json.errors[0].message);
     const saved = json.data.SaveMediaListEntry;
     e.progress = saved.progress; e.status = saved.status;
+    bumpDay(p.n);
     state.skipped.clear();
     if(saved.status === "COMPLETED") return afterFinish(e);
     pick();
@@ -524,6 +551,7 @@ $("#loginBtn").onclick = () => {
 $("#logout").onclick = () => {
   clearAuth();
   state.items = []; state.user = ""; state.skipped.clear();
+  try{ localStorage.removeItem("wn_cache"); localStorage.removeItem("wn_name"); }catch(_){}
   $("#result").replaceChildren(); $("#dlist").replaceChildren();
 };
 
@@ -618,6 +646,86 @@ function filtSum(){
 ["#kinds", "#times", "#genres", "#adult"].forEach(id => $(id).addEventListener("click", filtSum));
 filtSum();
 
+// ---------- Round 2: schedule, stats, goal ----------
+const el = (t, c, x) => { const n = document.createElement(t); if(c) n.className = c; if(x != null) n.textContent = x; return n; };
+const dayKey = (d = new Date()) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+function days(){ try{ return JSON.parse(localStorage.getItem("wn_days") || "{}"); }catch(_){ return {}; } }
+function goal(){ return Number(localStorage.getItem("wn_goal")) || 1; }
+function bumpDay(n){ const d = days(), k = dayKey(); d[k] = (d[k] || 0) + n; try{ localStorage.setItem("wn_days", JSON.stringify(d)); }catch(_){} }
+function streak(){
+  const d = days(), g = goal(), c = new Date(); let n = 0;
+  if((d[dayKey(c)] || 0) < g) c.setDate(c.getDate() - 1);
+  while((d[dayKey(c)] || 0) >= g){ n++; c.setDate(c.getDate() - 1); }
+  return n;
+}
+function fmtIn(secs){
+  if(secs <= 0) return "now";
+  const d = Math.floor(secs / 86400), h = Math.floor(secs % 86400 / 3600), m = Math.floor(secs % 3600 / 60);
+  return d ? d + "d " + h + "h" : h ? h + "h " + m + "m" : m + "m";
+}
+
+function renderSchedule(){
+  const box = $("#schedList"); box.replaceChildren();
+  const rows = state.items.filter(e => e.media.nextAiringEpisode && e.media.nextAiringEpisode.airingAt && !hide.has(e.media.id))
+    .sort((a, b) => a.media.nextAiringEpisode.airingAt - b.media.nextAiringEpisode.airingAt);
+  if(!rows.length){
+    box.append(el("div", "msg", "No airing anime on your list right now. If you just updated the app, log out and back in to fetch air times. AniList doesn't give manga chapter dates."));
+    return;
+  }
+  for(const e of rows){
+    const x = e.media, n = x.nextAiringEpisode, d = el("div", "msg"); d.style.marginTop = "8px";
+    const a = el("a", null, x.title.english || x.title.romaji); a.href = x.siteUrl; a.target = "_blank"; a.rel = "noopener"; a.style.fontWeight = "700";
+    const when = new Date(n.airingAt * 1000).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" });
+    const waiting = n.episode - 1 - e.progress;
+    d.append(a, document.createElement("br"), "Episode " + n.episode + " in " + fmtIn(n.airingAt - Date.now() / 1000) + " · " + when +
+      (e.status !== "PLANNING" && waiting > 0 ? " · " + waiting + " waiting for you" : ""));
+    box.append(d);
+  }
+}
+
+async function renderStats(){
+  const box = $("#statsBody"); box.replaceChildren();
+  let mins = 0, titles = 0;
+  for(const e of state.items){
+    const x = e.media, anime = x.type === "ANIME";
+    const total = anime ? (x.episodes || (x.nextAiringEpisode ? x.nextAiringEpisode.episode - 1 : 0)) : (x.chapters || 0);
+    const left = total - e.progress;
+    if(left > 0){ mins += left * (anime ? (x.duration || 24) : MIN_PER_CHAPTER); titles++; }
+  }
+  box.append(el("p", "q", "Backlog"), el("div", "msg", "About " + Math.round(mins / 60) + " hours across " + titles + " titles with known lengths."));
+
+  const c = new Map();
+  for(const e of state.items) for(const g of e.media.genres || []) c.set(g, (c.get(g) || 0) + 1);
+  const top = [...c.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+  box.append(el("p", "q", "Top genres"));
+  for(const [g, n] of top){
+    const row = el("div", "bar"), fill = el("i"); fill.style.width = Math.round(n / top[0][1] * 100) + "%";
+    row.append(el("span", null, g + " (" + n + ")"), fill); box.append(row);
+  }
+
+  box.append(el("p", "q", "Daily goal (episodes or chapters)"));
+  const row = el("div", "row");
+  for(const g of [1, 2, 3, 5]){
+    const b = el("button", "chip", g + "/day"); b.setAttribute("aria-pressed", String(goal() === g));
+    b.onclick = () => { try{ localStorage.setItem("wn_goal", g); }catch(_){} renderStats(); };
+    row.append(b);
+  }
+  box.append(row, el("div", "msg", "Today: " + (days()[dayKey()] || 0) + " of " + goal() + " · Streak: " + streak() + " day(s). Progress counts when you tap Mark as done."));
+
+  const fm = el("div", "msg", "Finished this month: …"); box.append(el("p", "q", "This month"), fm);
+  try{
+    const part = "{lists{entries{mediaId completedAt{year month}}}}";
+    const { json } = await gql("query($u:String){a:MediaListCollection(userName:$u,type:ANIME,status:COMPLETED)" + part + " m:MediaListCollection(userName:$u,type:MANGA,status:COMPLETED)" + part + "}", { u: state.user });
+    const now = new Date(), ids = new Set();
+    for(const k of ["a", "m"]) for(const l of (json.data && json.data[k] && json.data[k].lists) || []) for(const en of l.entries){
+      if(en.completedAt && en.completedAt.year === now.getFullYear() && en.completedAt.month === now.getMonth() + 1) ids.add(en.mediaId);
+    }
+    fm.textContent = "Finished this month: " + ids.size + " (only titles with a finish date)";
+  }catch(_){ fm.textContent = "Couldn't load this month's count. Check your connection."; }
+}
+
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+
 (async function start(){
   handleAuthRedirect();
   syncAuthUI();
@@ -627,8 +735,13 @@ filtSum();
     const name = json.data && json.data.Viewer && json.data.Viewer.name;
     if(!name) throw new Error("Couldn't read your AniList account. Log out and log in again.");
     state.user = name;
+    try{ localStorage.setItem("wn_name", name); }catch(_){}
     loadList(name);
-  }catch(err){ msg(err.message); syncAuthUI(); }
+  }catch(err){
+    const cn = localStorage.getItem("wn_name");
+    if(cn && auth.token){ state.user = cn; return loadList(cn); }
+    msg(err.message); syncAuthUI();
+  }
 })();
 </script>
 </body>

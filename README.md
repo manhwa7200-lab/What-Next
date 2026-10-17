@@ -12,6 +12,9 @@ It's a single `index.html` file with no build step and no dependencies. Host it 
 - **Discover tab:** search AniList for new anime or manga by type, genre, sort (Trending, Popular, Top rated, Newest), and title. Titles already on your list are marked.
 - **Mark as done:** save your progress to AniList straight from a pick. It marks a title Completed when you finish it, and moves a Planning title to Current.
 - **Blur covers:** hides cover art when you're in public.
+- **Schedule:** a countdown to the next episode of every airing anime on your list.
+- **Stats:** backlog hours, top genres, titles finished this month, and a daily goal with a streak.
+- **Offline:** installs to your home screen and shows your last saved list when you have no connection.
 - **Login required:** you must log in with your AniList account. There is no guest mode.
 
 ## How picks work
@@ -25,7 +28,7 @@ It's a single `index.html` file with no build step and no dependencies. Host it 
 
 ### 1. Host it
 
-1. Upload `index.html` to the root of a GitHub repo.
+1. Upload `index.html`, `sw.js`, `manifest.webmanifest`, and `icon.svg` to the root of a GitHub repo (the last three enable offline and home-screen install).
 2. Go to **Settings → Pages**, set the source to **Deploy from a branch**, choose `main` and `/ (root)`, and save.
 3. Wait about a minute, then open your site at `https://<your-username>.github.io/<repo-name>/`.
 

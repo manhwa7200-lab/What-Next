@@ -1,0 +1,10 @@
+{
+  "name": "What Next?",
+  "short_name": "What Next?",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#14172B",
+  "theme_color": "#14172B",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
