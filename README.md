@@ -1,6 +1,12 @@
 # What Next?
 
-**Version 2.1.1** · Company: Tokyo Brotherhood · Creator: Hariharasuthan Karunakaran · Contributor: Claude (AI)
+**Version 2.1.1** ·
+
+Publisher: Tokyo Brotherhood ·
+
+Creator: Hariharasuthan Karunakaran · 
+
+Contributor: Claude (AI)
 
 A phone-friendly web app that picks what to watch or read next from your [AniList](https://anilist.co), based on how much time you have.
 
