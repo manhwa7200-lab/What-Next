@@ -498,7 +498,8 @@ async function gql(query, variables){
   if(auth.token) headers.Authorization = "Bearer " + auth.token;
   const res = await fetch("https://graphql.anilist.co", { method: "POST", headers, body: JSON.stringify({ query, variables }) });
   const json = await res.json();
-  if(res.status === 401 && auth.token){ clearAuth(); throw new Error("Your login expired. Log in again."); }
+  const bad = (json.errors || []).some(x => /invalid token|unauthenticated|unauthorized/i.test(x.message || "") || x.status === 400 && /token/i.test(x.message || ""));
+  if(auth.token && (res.status === 401 || bad)){ clearAuth(); throw new Error("AniList didn't accept your login. Log in again."); }
   return { res, json };
 }
 
@@ -731,7 +732,7 @@ async function renderStats(){
 }
 
 $("#tokenBtn").onclick = () => {
-  const t = $("#tokenIn").value.trim();
+  const t = $("#tokenIn").value.trim().replace(/^Bearer\s+/i, "").replace(/^["']|["']$/g, "").replace(/\s+/g, "");
   if(t.length < 20) return msg("That doesn't look like a token. Copy it again from the website.");
   try{ localStorage.setItem("wn_token", t); }catch(_){}
   location.reload();
@@ -750,7 +751,7 @@ if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch
   try{
     const { json } = await gql("query{Viewer{name}}", {});
     const name = json.data && json.data.Viewer && json.data.Viewer.name;
-    if(!name) throw new Error("Couldn't read your AniList account. Log out and log in again.");
+    if(!name){ clearAuth(); throw new Error("AniList didn't accept your login. Log in again."); }
     state.user = name;
     try{ localStorage.setItem("wn_name", name); }catch(_){}
     loadList(name);
