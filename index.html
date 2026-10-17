@@ -813,7 +813,7 @@ async function markDone(e, p, btn){
 const APP = { version: "2.1.1", company: "Tokyo Brotherhood", creator: "Hariharasuthan Karunakaran", contributor: "Claude (AI)" };
 const CFG0 = window.WN_CONFIG || {};   // set in config.js
 const CLIENT_WEB = String(CFG0.clientWeb || "");
-const CLIENT_APP = String(CFG0.clientApp || "");
+const CLIENT_APP = String(CFG0.clientApp || "54060");   // built-in default, so login works even without config.js
 const APP_REDIRECT = "whatnext://auth";
 const isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 const nativePlugin = n => window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins[n];
@@ -829,7 +829,7 @@ function openExternal(url){
 }
 async function startLogin(){
   const id = clientId();
-  if(!id) return loginErr("Login isn't set up in this build yet. The developer needs to add the AniList Client ID in config.js.");
+  if(!id) return loginErr(isNative ? "Login isn't set up in this build yet. The developer needs to add the AniList Client ID." : "Login here needs a website client ID. Use the Android app to log in, or add a website client in config.js.");
   let url = "https://anilist.co/api/v2/oauth/authorize?client_id=" + encodeURIComponent(id) + "&response_type=token";
   if(isNative) url += "&redirect_uri=" + encodeURIComponent(APP_REDIRECT);
   const B = isNative && nativePlugin("Browser");
