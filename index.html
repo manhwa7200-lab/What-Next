@@ -831,7 +831,7 @@ async function startLogin(){
   const id = clientId();
   if(!id) return loginErr(isNative ? "Login isn't set up in this build yet. The developer needs to add the AniList Client ID." : "Login here needs a website client ID. Use the Android app to log in, or add a website client in config.js.");
   let url = "https://anilist.co/api/v2/oauth/authorize?client_id=" + encodeURIComponent(id) + "&response_type=token";
-  if(isNative) url += "&redirect_uri=" + encodeURIComponent(APP_REDIRECT);
+  // No redirect_uri here: AniList uses the Redirect URL saved on the client, and sending one switches it to a different login type.
   const B = isNative && nativePlugin("Browser");
   if(B && B.open){ try{ return await B.open({ url }); }catch(_){} }
   location.href = url;
