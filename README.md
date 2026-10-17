@@ -1,12 +1,6 @@
 # What Next?
 
-**Version 2.1.1** ·
-
-Publisher: Tokyo Brotherhood ·
-
-Creator: Hariharasuthan Karunakaran · 
-
-Contributor: Claude (AI)
+**Version 2.1.1** · Company: Tokyo Brotherhood · Creator: Hariharasuthan Karunakaran · Contributor: Claude (AI)
 
 A phone-friendly web app that picks what to watch or read next from your [AniList](https://anilist.co), based on how much time you have.
 
@@ -20,6 +14,10 @@ It's a single `index.html` file with no build step and no dependencies. Host it 
 - **Discover tab:** search AniList for new anime or manga by type, genre, sort (Trending, Popular, Top rated, Newest), and title. Titles already on your list are marked.
 - **Mark as done:** save your progress to AniList straight from a pick. It marks a title Completed when you finish it, and moves a Planning title to Current.
 - **Blur covers:** hides cover art when you're in public.
+- **Anime and Manga lists:** your full AniList lists with status tabs, search, a filter sheet (sort, format, status, country, year, length, score, genres include/exclude) and list customisation (grid or list, columns, hide score or progress). Tap a card for quick view with +1 / -1 progress.
+- **Profile:** your avatar and totals, with Stats, Chat, and Settings inside.
+- **Settings:** Discord and secrets, appearance (System, Light, Dark, AMOLED, custom colours), list options, privacy, and account.
+- **Discord sync:** anime and manga updates from your AniList list are posted to Discord forum threads, run from inside the app.
 - **Schedule:** a countdown to the next episode of every airing anime on your list.
 - **Stats:** backlog hours, top genres, titles finished this month, and a daily goal with a streak.
 - **Offline:** installs to your home screen and shows your last saved list when you have no connection.
