@@ -180,6 +180,30 @@ input[type=checkbox]{width:auto;accent-color:var(--sakura)}
 .qvprog .chip{flex:0 0 auto;min-width:64px}
 .colors{display:flex;gap:18px;margin:16px 0 4px;flex-wrap:wrap}
 input[type=color]{width:46px;height:34px;padding:0;border:0;background:none}
+.login{position:fixed;inset:0;z-index:40;overflow:hidden;color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:calc(env(safe-area-inset-top,0px) + 56px) 26px calc(env(safe-area-inset-bottom,0px) + 34px);background:#0b1430}
+.sky{position:absolute;inset:0;background:radial-gradient(120% 60% at 50% 100%,rgba(236,140,164,.85) 0%,rgba(236,140,164,0) 60%),linear-gradient(180deg,#0a1838 0%,#14306a 36%,#2a5a95 60%,#5f88ae 80%,#b9a0b6 100%)}
+.cloud{position:absolute;border-radius:50%;background:radial-gradient(closest-side,rgba(255,255,255,.6),rgba(255,255,255,0));filter:blur(14px);animation:drift 40s ease-in-out infinite}
+.c1{width:340px;height:200px;top:20%;left:-10%}
+.c2{width:430px;height:240px;top:42%;right:-20%;animation-duration:55s;animation-direction:reverse}
+.c3{width:300px;height:180px;top:60%;left:8%;animation-duration:70s}
+@keyframes drift{0%,100%{transform:translateX(0)}50%{transform:translateX(46px)}}
+.petal{position:absolute;top:-24px;width:10px;height:14px;border-radius:70% 0 70% 0;background:rgba(255,198,216,.92);animation:fall linear infinite}
+@keyframes fall{to{transform:translate3d(70px,112vh,0) rotate(540deg)}}
+.shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.2),rgba(0,0,0,0) 30%,rgba(0,0,0,.6) 100%)}
+.ltop,.lbottom{position:relative;z-index:1}
+.ltop h2{margin:16px 0 2px;font-size:2.1rem;letter-spacing:-.02em}
+.ltop p{margin:0;opacity:.85}
+.lbottom h3{margin:0 0 8px;font-size:1.5rem}
+.lbottom p{margin:0 0 22px;line-height:1.5;opacity:.92}
+.lbottom a{color:#fff;text-decoration:underline}
+.lerr{color:#ffd1dc;min-height:1.2em;margin:-10px 0 14px!important}
+.lbtns{display:flex;gap:16px}
+.lbtn{flex:1;padding:16px;border-radius:16px;font:inherit;font-weight:800;font-size:1.05rem;cursor:pointer;color:#fff}
+.lbtn.ghost{background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.85);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.lbtn.solid{background:var(--grad);border:0;box-shadow:0 8px 24px rgba(255,77,134,.4)}
+.lbtn:active{transform:scale(.97)}
+.lbottom .lfoot{text-align:center;font-size:.78rem;opacity:.7;margin:18px 0 0}
+@media (prefers-reduced-motion:reduce){.cloud,.petal{animation:none}}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -200,25 +224,16 @@ input[type=color]{width:46px;height:34px;padding:0;border:0;background:none}
   </div>
 
   <div id="pickWrap">
-  <section id="setup">
-    <div class="welcome">
-      <div class="logo big">?</div>
-      <h2>Welcome</h2>
-      <p class="sub">Log in with your AniList account to pick, track, and sync.</p>
-      <button class="go" id="loginBtn">Log in with AniList</button>
-      <p class="sub" id="loginErr" style="margin-top:12px"></p>
+  <section id="setup" class="login">
+    <div class="sky" aria-hidden="true"><i class="cloud c1"></i><i class="cloud c2"></i><i class="cloud c3"></i><span class="petal" style="left:43%;animation-duration:16.6s;animation-delay:-5.5s;transform:scale(0.73)"></span><span class="petal" style="left:70%;animation-duration:9.8s;animation-delay:-8.2s;transform:scale(1.34)"></span><span class="petal" style="left:29%;animation-duration:9.3s;animation-delay:-6.1s;transform:scale(0.75)"></span><span class="petal" style="left:13%;animation-duration:13.4s;animation-delay:-0.8s;transform:scale(1.10)"></span><span class="petal" style="left:30%;animation-duration:14.0s;animation-delay:-8.2s;transform:scale(0.74)"></span><span class="petal" style="left:76%;animation-duration:12.2s;animation-delay:-13.7s;transform:scale(0.73)"></span><span class="petal" style="left:19%;animation-duration:11.3s;animation-delay:-2.0s;transform:scale(0.78)"></span><span class="petal" style="left:41%;animation-duration:13.5s;animation-delay:-9.5s;transform:scale(0.77)"></span><span class="petal" style="left:75%;animation-duration:14.1s;animation-delay:-5.2s;transform:scale(1.08)"></span><span class="petal" style="left:10%;animation-duration:13.5s;animation-delay:-8.7s;transform:scale(1.05)"></span><span class="petal" style="left:70%;animation-duration:12.4s;animation-delay:-4.4s;transform:scale(1.11)"></span><span class="petal" style="left:60%;animation-duration:11.9s;animation-delay:-3.5s;transform:scale(0.83)"></span><span class="petal" style="left:33%;animation-duration:9.7s;animation-delay:-4.2s;transform:scale(1.05)"></span><span class="petal" style="left:45%;animation-duration:14.8s;animation-delay:-4.0s;transform:scale(1.39)"></span><div class="shade"></div></div>
+    <div class="ltop"><div class="logo">?</div><h2>What Next?</h2><p>Powered by AniList</p></div>
+    <div class="lbottom">
+      <h3>Important to Know</h3>
+      <p>You'll be redirected to <a href="https://anilist.co" target="_blank" rel="noopener">anilist.co</a> to log in or register. Make sure the URL is anilist.co before entering your email and password.</p>
+      <p class="lerr" id="loginErr"></p>
+      <div class="lbtns"><button class="lbtn ghost" id="registerBtn">Register</button><button class="lbtn solid" id="loginBtn">Login</button></div>
+      <p class="lfoot">v2.1.1 · Tokyo Brotherhood</p>
     </div>
-    <details class="filt" id="authSetup">
-      <summary>Advanced login options</summary>
-      <p class="sub" style="margin-top:12px">Use your own AniList client. Create one at <a href="https://anilist.co/settings/developer" target="_blank" rel="noopener" style="color:var(--sakura);font-weight:700">anilist.co/settings/developer</a> and set its Redirect URL to:</p>
-      <code id="redirectUrl" style="display:block;margin:8px 0;padding:8px 10px;background:var(--chip);border-radius:12px;font-size:.85rem;word-break:break-all"></code>
-      <input id="clientId" inputmode="numeric" autocomplete="off" placeholder="Client ID (numbers only)">
-      <button class="go alt" id="saveClient">Save client ID</button>
-      <p class="sub" style="margin-top:16px">Or paste a login token, for example one copied from the website.</p>
-      <input id="tokenIn" autocomplete="off" placeholder="Paste login token">
-      <button class="go alt" id="tokenBtn">Use this token</button>
-    </details>
-    <p class="foot">What Next? v2.1.1<br>Tokyo Brotherhood</p>
   </section>
 
   <section id="app" hidden>
@@ -453,6 +468,19 @@ input[type=color]{width:46px;height:34px;padding:0;border:0;background:none}
   <label class="chk"><input type="checkbox" id="csHideUnscored"> Hide score when not scored</label>
   <label class="chk" style="margin-top:14px"><input type="checkbox" id="csHideProgress"> Hide progress</label>
 </div>
+
+<div class="qvback" id="needClient" hidden style="z-index:50"><div class="qvbox">
+  <h3 style="margin:0 0 6px">One-time setup</h3>
+  <p class="sub">This build has no AniList client built in yet. Create a free one at <a href="https://anilist.co/settings/developer" target="_blank" rel="noopener" style="color:var(--sakura);font-weight:700">anilist.co/settings/developer</a> and use this Redirect URL:</p>
+  <code id="redirectUrl" style="display:block;margin:10px 0;padding:8px 10px;background:var(--chip);border-radius:12px;font-size:.85rem;word-break:break-all"></code>
+  <input id="clientId" inputmode="numeric" autocomplete="off" placeholder="Client ID (numbers only)">
+  <p class="sub" id="needErr" style="color:var(--sakura);min-height:1.2em"></p>
+  <button class="go" id="saveClient" style="margin-top:4px">Save and log in</button>
+  <details style="margin-top:14px"><summary class="sub" style="cursor:pointer">Have a login token instead?</summary>
+    <input id="tokenIn" autocomplete="off" placeholder="Paste login token" style="margin-top:10px">
+    <button class="go alt" id="tokenBtn">Use this token</button></details>
+  <button class="go alt" id="needClose">Cancel</button>
+</div></div>
 
 <div class="qvback" id="qv" hidden><div class="qvbox" id="qvBox"></div></div>
 
@@ -807,20 +835,28 @@ function clientId(){
 function loginErr(t){ $("#loginErr").textContent = t; }
 try{ $("#clientId").value = localStorage.getItem("wn_client") || ""; }catch(_){}
 $("#redirectUrl").textContent = isNative ? APP_REDIRECT : location.origin + location.pathname.replace(/index\.html$/, "");
-$("#saveClient").onclick = () => {
-  const id = $("#clientId").value.trim();
-  if(!/^\d+$/.test(id)) return loginErr("A Client ID is a number from AniList's developer page.");
-  try{ localStorage.setItem("wn_client", id); }catch(_){}
-  loginErr("Saved. Now tap Log in with AniList.");
-};
-$("#loginBtn").onclick = async () => {
+function openExternal(url){
+  const B = isNative && nativePlugin("Browser");
+  if(B && B.open){ try{ return B.open({ url }); }catch(_){} }
+  window.open(url, "_blank", "noopener");
+}
+async function startLogin(){
   const id = clientId();
-  if(!id){ $("#authSetup").open = true; return loginErr("This build has no AniList client built in. Add your Client ID under Advanced login options."); }
+  if(!id){ $("#needClient").hidden = false; return; }
   let url = "https://anilist.co/api/v2/oauth/authorize?client_id=" + encodeURIComponent(id) + "&response_type=token";
   if(isNative) url += "&redirect_uri=" + encodeURIComponent(APP_REDIRECT);
   const B = isNative && nativePlugin("Browser");
   if(B && B.open){ try{ return await B.open({ url }); }catch(_){} }
   location.href = url;
+}
+$("#loginBtn").onclick = startLogin;
+$("#registerBtn").onclick = () => openExternal("https://anilist.co/signup");
+$("#needClose").onclick = () => { $("#needClient").hidden = true; };
+$("#saveClient").onclick = () => {
+  const id = $("#clientId").value.trim();
+  if(!/^\d+$/.test(id)) return void ($("#needErr").textContent = "A Client ID is a number from AniList's developer page.");
+  try{ localStorage.setItem("wn_client", id); }catch(_){}
+  $("#needErr").textContent = ""; $("#needClient").hidden = true; startLogin();
 };
 function handleAuthUrl(url){
   if(!url || url.indexOf(APP_REDIRECT.split("://")[0] + "://") !== 0) return;
@@ -1033,7 +1069,7 @@ async function renderStats(){
 
 $("#tokenBtn").onclick = () => {
   const t = $("#tokenIn").value.trim().replace(/^Bearer\s+/i, "").replace(/^["']|["']$/g, "").replace(/\s+/g, "");
-  if(t.length < 20) return msg("That doesn't look like a token. Copy it again from the website.");
+  if(t.length < 20) return void ($("#needErr").textContent = "That doesn't look like a token. Copy it again from the website.");
   try{ localStorage.setItem("wn_token", t); }catch(_){}
   location.reload();
 };
@@ -1505,7 +1541,7 @@ if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch
   }catch(err){
     const cn = localStorage.getItem("wn_name");
     if(cn && auth.token){ state.user = cn; return loadList(cn); }
-    msg(err.message); syncAuthUI();
+    loginErr(err.message); syncAuthUI();
   }
 })();
 </script>
