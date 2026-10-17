@@ -8,6 +8,7 @@
 <link rel="icon" href="icon.svg">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="What Next?">
+<meta name="author" content="Hariharasuthan Karunakaran">
 <title>What Next?</title>
 <style>
 :root{
@@ -130,6 +131,10 @@ a.link{display:inline-block;margin-top:14px;color:var(--sakura);font-weight:700;
 .log{white-space:pre-wrap;max-height:240px;overflow:auto;font:12px/1.45 ui-monospace,Menlo,monospace;background:var(--chip);border-radius:14px;padding:12px;margin-top:12px}
 .chk{display:flex;align-items:center;gap:10px;text-transform:none;letter-spacing:0;font-size:.95rem;color:var(--ink);font-weight:600}
 input[type=checkbox]{width:auto;accent-color:var(--sakura)}
+.welcome{text-align:center;padding:30px 8px 8px}
+.logo.big{width:76px;height:76px;font-size:2.3rem;border-radius:24px;margin:0 auto 16px}
+.welcome h2{margin:0 0 6px;font-size:1.7rem;letter-spacing:-.02em}
+.foot{text-align:center;color:var(--muted);font-size:.8rem;margin-top:24px;line-height:1.6}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -151,20 +156,24 @@ input[type=checkbox]{width:auto;accent-color:var(--sakura)}
 
   <div id="pickWrap">
   <section id="setup">
-    <p class="q">Log in with your AniList account to use the app.</p>
-    <div id="authSetup" class="auth">
-      <p>One-time setup. Make a free AniList app so it can log you in:</p>
-      <ol>
-        <li>Open <a href="https://anilist.co/settings/developer" target="_blank" rel="noopener">anilist.co/settings/developer</a> and tap <b>Create New Client</b>.</li>
-        <li>Name it anything. For Redirect URL, use exactly this address: <code id="redirectUrl"></code></li>
-        <li>Save it, then paste the Client ID number below.</li>
-      </ol>
-      <input id="clientId" inputmode="numeric" autocomplete="off" placeholder="Client ID (numbers only)">
+    <div class="welcome">
+      <div class="logo big">?</div>
+      <h2>Welcome</h2>
+      <p class="sub">Log in with your AniList account to pick, track, and sync.</p>
       <button class="go" id="loginBtn">Log in with AniList</button>
-      <p style="margin-top:16px">Using the Android app? Log in on your website first, then tap More, then Copy my login token, and paste it here.</p>
+      <p class="sub" id="loginErr" style="margin-top:12px"></p>
+    </div>
+    <details class="filt" id="authSetup">
+      <summary>Advanced login options</summary>
+      <p class="sub" style="margin-top:12px">Use your own AniList client. Create one at <a href="https://anilist.co/settings/developer" target="_blank" rel="noopener" style="color:var(--sakura);font-weight:700">anilist.co/settings/developer</a> and set its Redirect URL to:</p>
+      <code id="redirectUrl" style="display:block;margin:8px 0;padding:8px 10px;background:var(--chip);border-radius:12px;font-size:.85rem;word-break:break-all"></code>
+      <input id="clientId" inputmode="numeric" autocomplete="off" placeholder="Client ID (numbers only)">
+      <button class="go alt" id="saveClient">Save client ID</button>
+      <p class="sub" style="margin-top:16px">Or paste a login token, for example one copied from the website.</p>
       <input id="tokenIn" autocomplete="off" placeholder="Paste login token">
       <button class="go alt" id="tokenBtn">Use this token</button>
-    </div>
+    </details>
+    <p class="foot">What Next? v2.1.1<br>Tokyo Brotherhood</p>
   </section>
 
   <section id="app" hidden>
@@ -299,6 +308,14 @@ input[type=checkbox]{width:auto;accent-color:var(--sakura)}
     <div class="q">Android app login</div>
     <p class="sub">Copy your login token to paste into the app. Never share it with anyone.</p>
     <button class="go alt" id="copyTok">Copy my login token</button>
+
+    <div class="q">About</div>
+    <div class="card" style="margin-top:0">
+      <b style="font-size:1.1rem">What Next?</b> <span class="pill">v2.1.1</span>
+      <p class="sub">Company: Tokyo Brotherhood</p>
+      <p class="sub">Creator: Hariharasuthan Karunakaran</p>
+      <p class="sub">Contributor: Claude (AI)</p>
+    </div>
   </section>
 </main>
 
@@ -641,14 +658,50 @@ async function markDone(e, p, btn){
   }
 }
 
+// ---------- Login: the client ID is built in, like other AniList apps ----------
+const APP = { version: "2.1.1", company: "Tokyo Brotherhood", creator: "Hariharasuthan Karunakaran", contributor: "Claude (AI)" };
+const CLIENT_WEB = "";   // AniList client ID for the website. Its Redirect URL = your site address.
+const CLIENT_APP = "";   // AniList client ID for the Android app. Its Redirect URL = whatnext://auth
+const APP_REDIRECT = "whatnext://auth";
+const isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const nativePlugin = n => window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins[n];
+function clientId(){
+  let own = ""; try{ own = localStorage.getItem("wn_client") || ""; }catch(_){}
+  return (isNative ? CLIENT_APP : CLIENT_WEB) || own;
+}
+function loginErr(t){ $("#loginErr").textContent = t; }
 try{ $("#clientId").value = localStorage.getItem("wn_client") || ""; }catch(_){}
-$("#redirectUrl").textContent = location.origin + location.pathname.replace(/index\.html$/, "");
-$("#loginBtn").onclick = () => {
+$("#redirectUrl").textContent = isNative ? APP_REDIRECT : location.origin + location.pathname.replace(/index\.html$/, "");
+$("#saveClient").onclick = () => {
   const id = $("#clientId").value.trim();
-  if(!/^\d+$/.test(id)) return msg("Enter your Client ID first. It's a number from AniList's developer page.");
+  if(!/^\d+$/.test(id)) return loginErr("A Client ID is a number from AniList's developer page.");
   try{ localStorage.setItem("wn_client", id); }catch(_){}
-  location.href = "https://anilist.co/api/v2/oauth/authorize?client_id=" + id + "&response_type=token";
+  loginErr("Saved. Now tap Log in with AniList.");
 };
+$("#loginBtn").onclick = async () => {
+  const id = clientId();
+  if(!id){ $("#authSetup").open = true; return loginErr("This build has no AniList client built in. Add your Client ID under Advanced login options."); }
+  let url = "https://anilist.co/api/v2/oauth/authorize?client_id=" + encodeURIComponent(id) + "&response_type=token";
+  if(isNative) url += "&redirect_uri=" + encodeURIComponent(APP_REDIRECT);
+  const B = isNative && nativePlugin("Browser");
+  if(B && B.open){ try{ return await B.open({ url }); }catch(_){} }
+  location.href = url;
+};
+function handleAuthUrl(url){
+  if(!url || url.indexOf(APP_REDIRECT.split("://")[0] + "://") !== 0) return;
+  const t = new URLSearchParams(url.split("#")[1] || url.split("?")[1] || "").get("access_token");
+  if(!t) return;
+  try{ localStorage.setItem("wn_token", t); }catch(_){}
+  try{ const B = nativePlugin("Browser"); if(B && B.close) B.close(); }catch(_){}
+  location.reload();
+}
+if(isNative){
+  const A = nativePlugin("App");
+  if(A && A.addListener){
+    A.addListener("appUrlOpen", ev => handleAuthUrl(ev.url));
+    if(A.getLaunchUrl) A.getLaunchUrl().then(r => r && handleAuthUrl(r.url)).catch(() => {});
+  }
+}
 $("#logout").onclick = () => {
   clearAuth();
   state.items = []; state.user = ""; state.uid = 0; state.skipped.clear();

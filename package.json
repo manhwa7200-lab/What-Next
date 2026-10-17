@@ -1,9 +1,11 @@
 {
   "name": "what-next-app",
-  "version": "1.0.0",
+  "version": "2.1.1",
   "private": true,
   "dependencies": {
     "@capacitor/android": "^7.0.0",
+    "@capacitor/app": "^7.0.0",
+    "@capacitor/browser": "^7.0.0",
     "@capacitor/cli": "^7.0.0",
     "@capacitor/core": "^7.0.0"
   }

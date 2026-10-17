@@ -1,5 +1,7 @@
 # What Next?
 
+**Version 2.1.1** · Company: Tokyo Brotherhood · Creator: Hariharasuthan Karunakaran · Contributor: Claude (AI)
+
 A phone-friendly web app that picks what to watch or read next from your [AniList](https://anilist.co), based on how much time you have.
 
 It's a single `index.html` file with no build step and no dependencies. Host it on GitHub Pages and add it to your home screen.
@@ -33,18 +35,16 @@ It's a single `index.html` file with no build step and no dependencies. Host it 
 2. Go to **Settings → Pages**, set the source to **Deploy from a branch**, choose `main` and `/ (root)`, and save.
 3. Wait about a minute, then open your site at `https://<your-username>.github.io/<repo-name>/`.
 
-### 2. Create an AniList app (one time)
+### 2. AniList login (one time, for the developer)
+The login button works like other AniList apps: the Client ID is built into the app, so users just tap **Log in with AniList**. Create two clients at [anilist.co/settings/developer](https://anilist.co/settings/developer):
 
-1. Open [anilist.co/settings/developer](https://anilist.co/settings/developer) and tap **Create New Client**.
-2. Name it anything.
-3. For **Redirect URL**, use the exact address of your site. The login screen shows it for you to copy.
-4. Save it and copy the **Client ID** number.
+- **Website client:** Redirect URL is your site address, for example `https://<your-username>.github.io/<repo-name>/`.
+- **Android client:** Redirect URL is `whatnext://auth`.
+
+Put the two Client IDs in `CLIENT_WEB` and `CLIENT_APP` near the top of the login code in `index.html`. Client IDs are public, not secrets. If they are left empty, users can enter their own Client ID under **Advanced login options**.
 
 ### 3. Log in
-
-Open your site, paste the Client ID, and tap **Log in with AniList**. Approve the request and you'll land back in the app, logged in.
-
-On your phone, use your browser's **Add to Home screen** option to make it feel like an app.
+Tap **Log in with AniList** and approve. In the Android app the browser returns you to the app automatically. Advanced options also let you paste a login token.
 
 ## Privacy
 
@@ -62,3 +62,9 @@ On your phone, use your browser's **Add to Home screen** option to make it feel 
 ## Built with
 
 Plain HTML, CSS, and JavaScript, using the [AniList GraphQL API](https://docs.anilist.co/).
+
+## Credits
+
+- Company: Tokyo Brotherhood
+- Creator: Hariharasuthan Karunakaran
+- Contributor: Claude (AI)
