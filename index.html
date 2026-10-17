@@ -56,6 +56,14 @@ a.link{display:inline-block;margin-top:14px;color:var(--ink);font-weight:700}
 .msg{padding:14px 16px;border-radius:14px;background:var(--chip)}
 .who{display:flex;justify-content:space-between;align-items:center;color:var(--muted);margin-bottom:4px}
 .who button{background:none;border:0;color:var(--sakura);font:inherit;font-weight:700;cursor:pointer;padding:6px 0}
+.tabs{display:flex;gap:8px;margin:0 0 4px}
+select{width:100%;padding:13px 14px;font:inherit;color:var(--ink);background:var(--card);border:2px solid var(--line);border-radius:14px}
+.item{display:flex;gap:12px;margin-top:12px;padding:10px;background:var(--card);border:2px solid var(--line);border-radius:16px}
+.item img{width:72px;height:104px;object-fit:cover;border-radius:10px;background:var(--chip);flex:none}
+.item h3{margin:0 0 4px;font-size:1.05rem;line-height:1.2}
+.item p{margin:0;color:var(--muted);font-size:.9rem}
+.item a{display:inline-block;margin-top:6px;font-weight:700;color:var(--sakura)}
+.blur img{filter:blur(14px)}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -64,6 +72,13 @@ a.link{display:inline-block;margin-top:14px;color:var(--ink);font-weight:700}
   <h1>What next?</h1>
   <p class="sub">Tell it how much time you have. It picks from your AniList.</p>
 
+  <div class="tabs" id="tabs">
+    <button class="chip" data-v="pick" aria-pressed="true">Pick</button>
+    <button class="chip" data-v="discover" aria-pressed="false">Discover</button>
+    <button class="chip" id="blurBtn" aria-pressed="false">Blur covers</button>
+  </div>
+
+  <div id="pickWrap">
   <section id="setup">
     <label for="user">Your AniList username</label>
     <input id="user" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="username">
@@ -91,16 +106,52 @@ a.link{display:inline-block;margin-top:14px;color:var(--ink);font-weight:700}
     <div class="q">Genre</div>
     <div class="row" id="genres"></div>
 
+    <div class="q">Content</div>
+    <div class="row" id="adult">
+      <button class="chip" data-v="ALL" aria-pressed="true">Everything</button>
+      <button class="chip" data-v="ONLY" aria-pressed="false">18+ only</button>
+      <button class="chip" data-v="HIDE" aria-pressed="false">Hide 18+</button>
+    </div>
+
     <button class="go" id="pickBtn">Pick for me</button>
   </section>
 
   <div id="result" aria-live="polite"></div>
+  </div>
+
+  <section id="discover" hidden>
+    <label for="dq">Search</label>
+    <input id="dq" autocomplete="off" placeholder="Title (optional)">
+    <div class="q">Type</div>
+    <div class="row" id="dtype">
+      <button class="chip" data-v="ANIME" aria-pressed="true">Anime</button>
+      <button class="chip" data-v="MANGA" aria-pressed="false">Manga</button>
+    </div>
+    <div class="q">Content</div>
+    <div class="row" id="dadult">
+      <button class="chip" data-v="ALL" aria-pressed="false">Everything</button>
+      <button class="chip" data-v="ONLY" aria-pressed="true">18+ only</button>
+      <button class="chip" data-v="HIDE" aria-pressed="false">Hide 18+</button>
+    </div>
+    <label for="dgenre">Genre</label>
+    <select id="dgenre"></select>
+    <label for="dsort">Sort by</label>
+    <select id="dsort">
+      <option value="TRENDING_DESC">Trending now</option>
+      <option value="POPULARITY_DESC">Most popular</option>
+      <option value="SCORE_DESC">Top rated</option>
+      <option value="START_DATE_DESC">Newest</option>
+    </select>
+    <button class="go" id="dgo">Find titles</button>
+    <div id="dlist" aria-live="polite"></div>
+    <button class="go alt" id="dmore" hidden>Load more</button>
+  </section>
 </main>
 
 <script>
 const $ = s => document.querySelector(s);
 const MIN_PER_CHAPTER = 6; // rough guess for reading speed
-const state = { user: "", kind: "BOTH", time: 30, genre: "ALL", items: [], skipped: new Set() };
+const state = { user: "", kind: "BOTH", time: 30, genre: "ALL", adult: "ALL", items: [], skipped: new Set() };
 
 // Build genre chips from the genres that actually appear in the user's list.
 function buildGenres(){
@@ -125,7 +176,7 @@ query($u:String){
 }
 fragment M on Media{
   id type siteUrl title{romaji english} coverImage{extraLarge large}
-  episodes chapters duration averageScore genres nextAiringEpisode{episode}
+  episodes chapters duration averageScore genres isAdult nextAiringEpisode{episode}
 }`;
 
 function msg(text){
@@ -193,6 +244,8 @@ function pick(){
   for(const e of state.items){
     if(state.kind !== "BOTH" && e.media.type !== state.kind) continue;
     if(state.genre !== "ALL" && !(e.media.genres || []).includes(state.genre)) continue;
+    if(state.adult === "ONLY" && !e.media.isAdult) continue;
+    if(state.adult === "HIDE" && e.media.isAdult) continue;
     const p = plan(e);
     if(!p) continue;
     const base = e.status === "PLANNING" ? 50 : e.status === "REPEATING" ? 40 : 100;
@@ -236,7 +289,7 @@ function wireChips(id, key){
     state.skipped.clear(); pick();
   });
 }
-wireChips("#kinds", "kind"); wireChips("#times", "time"); wireChips("#genres", "genre");
+wireChips("#kinds", "kind"); wireChips("#times", "time"); wireChips("#genres", "genre"); wireChips("#adult", "adult");
 
 $("#load").onclick = () => { const u = $("#user").value.trim(); if(u) loadList(u); };
 $("#user").addEventListener("keydown", e => { if(e.key === "Enter") $("#load").click(); });
@@ -244,6 +297,107 @@ $("#pickBtn").onclick = () => { state.skipped.clear(); pick(); };
 $("#change").onclick = () => {
   $("#app").hidden = true; $("#setup").hidden = false; $("#result").replaceChildren(); $("#user").focus();
 };
+
+// ---------- Tabs and cover blur ----------
+function showTab(t){
+  $("#pickWrap").hidden = t !== "pick";
+  $("#discover").hidden = t !== "discover";
+  document.querySelectorAll("#tabs .chip[data-v]").forEach(c => c.setAttribute("aria-pressed", String(c.dataset.v === t)));
+  if(t === "discover" && !$("#dlist").children.length) discover(false);
+}
+$("#tabs").addEventListener("click", ev => {
+  const b = ev.target.closest(".chip[data-v]"); if(b) showTab(b.dataset.v);
+});
+function setBlur(on){
+  document.body.classList.toggle("blur", on);
+  $("#blurBtn").setAttribute("aria-pressed", String(on));
+  $("#blurBtn").textContent = on ? "Blur: on" : "Blur covers";
+  try{ localStorage.setItem("wn_blur", on ? "1" : "0"); }catch(_){}
+}
+$("#blurBtn").onclick = () => setBlur(!document.body.classList.contains("blur"));
+try{ setBlur(localStorage.getItem("wn_blur") === "1"); }catch(_){}
+
+// ---------- Discover ----------
+const GENRES = ["Action","Adventure","Comedy","Drama","Ecchi","Fantasy","Hentai","Horror","Mahou Shoujo","Mecha","Music","Mystery","Psychological","Romance","Sci-Fi","Slice of Life","Sports","Supernatural","Thriller"];
+$("#dgenre").replaceChildren(...[["", "Any genre"], ...GENRES.map(g => [g, g])].map(([v, t]) => {
+  const o = document.createElement("option"); o.value = v; o.textContent = t; return o;
+}));
+
+const dState = { type: "ANIME", adult: "ONLY", page: 1 };
+const DQ = `
+query($page:Int,$type:MediaType,$sort:[MediaSort],$adult:Boolean,$genre:String,$search:String,$statusNot:MediaStatus){
+  Page(page:$page,perPage:20){
+    pageInfo{hasNextPage}
+    media(type:$type,sort:$sort,isAdult:$adult,genre:$genre,search:$search,status_not:$statusNot){
+      id siteUrl title{romaji english} coverImage{large} averageScore format episodes chapters genres seasonYear
+    }
+  }
+}`;
+
+function wireD(id, key){
+  $(id).addEventListener("click", ev => {
+    const b = ev.target.closest(".chip"); if(!b) return;
+    $(id).querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", String(c === b)));
+    dState[key] = b.dataset.v;
+  });
+}
+wireD("#dtype", "type"); wireD("#dadult", "adult");
+
+function itemCard(m, onList){
+  const card = document.createElement("div"); card.className = "item";
+  const img = new Image(); img.alt = ""; img.loading = "lazy"; img.src = m.coverImage.large;
+  const info = document.createElement("div");
+  const h = document.createElement("h3"); h.textContent = m.title.english || m.title.romaji;
+  const size = m.episodes ? m.episodes + " eps" : (m.chapters ? m.chapters + " ch" : "");
+  const meta = document.createElement("p");
+  meta.textContent = [(m.format || "").replace(/_/g, " "), m.seasonYear, size, m.averageScore ? "★ " + m.averageScore + "%" : ""].filter(Boolean).join(" · ");
+  const gen = document.createElement("p"); gen.textContent = (m.genres || []).slice(0, 4).join(", ");
+  const a = document.createElement("a"); a.href = m.siteUrl; a.target = "_blank"; a.rel = "noopener";
+  a.textContent = onList ? "On your list. Open on AniList" : "Open on AniList";
+  info.append(h, meta, gen, a);
+  card.append(img, info);
+  return card;
+}
+
+async function discover(append){
+  const list = $("#dlist"), more = $("#dmore"), btn = $("#dgo");
+  if(!append){
+    dState.page = 1; more.hidden = true;
+    const d = document.createElement("div"); d.className = "msg"; d.textContent = "Searching…";
+    list.replaceChildren(d);
+  }
+  btn.disabled = true; more.disabled = true;
+  try{
+    const vars = { page: dState.page, type: dState.type, sort: [$("#dsort").value], statusNot: "NOT_YET_RELEASED" };
+    if(dState.adult === "ONLY") vars.adult = true;
+    if(dState.adult === "HIDE") vars.adult = false;
+    const g = $("#dgenre").value; if(g) vars.genre = g;
+    const q = $("#dq").value.trim(); if(q) vars.search = q;
+    const res = await fetch("https://graphql.anilist.co", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({ query: DQ, variables: vars })
+    });
+    const json = await res.json();
+    if(json.errors && !json.data?.Page) throw new Error("AniList said: " + json.errors[0].message);
+    const page = json.data.Page;
+    if(!append) list.replaceChildren();
+    const onList = new Set(state.items.map(e => e.media.id));
+    page.media.forEach(m => list.append(itemCard(m, onList.has(m.id))));
+    if(!list.children.length){
+      const d = document.createElement("div"); d.className = "msg"; d.textContent = "No results. Try another genre or sort.";
+      list.append(d);
+    }
+    more.hidden = !page.pageInfo.hasNextPage;
+  }catch(err){
+    const d = document.createElement("div"); d.className = "msg";
+    d.textContent = err.message.includes("Failed to fetch") ? "Couldn't reach AniList. Check your connection and try again." : err.message;
+    list.replaceChildren(d); more.hidden = true;
+  }finally{ btn.disabled = false; more.disabled = false; }
+}
+$("#dgo").onclick = () => discover(false);
+$("#dmore").onclick = () => { dState.page++; discover(true); };
+$("#dq").addEventListener("keydown", e => { if(e.key === "Enter") discover(false); });
 
 const saved = localStorage.getItem("wn_user");
 if(saved){ $("#user").value = saved; loadList(saved); }
