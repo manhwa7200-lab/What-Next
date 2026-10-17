@@ -111,6 +111,9 @@ select{width:100%;padding:13px 14px;font:inherit;color:var(--ink);background:var
       </ol>
       <input id="clientId" inputmode="numeric" autocomplete="off" placeholder="Client ID (numbers only)">
       <button class="go" id="loginBtn">Log in with AniList</button>
+      <p style="margin-top:16px">Using the Android app? Log in on your website first, then tap More, then Copy my login token, and paste it here.</p>
+      <input id="tokenIn" autocomplete="off" placeholder="Paste login token">
+      <button class="go alt" id="tokenBtn">Use this token</button>
     </div>
   </section>
 
@@ -198,6 +201,9 @@ select{width:100%;padding:13px 14px;font:inherit;color:var(--ink);background:var
     <div class="q">Hidden titles</div>
     <p class="sub" id="hideCount"></p>
     <button class="go alt" id="hideClear">Show hidden titles again</button>
+    <div class="q">Android app login</div>
+    <p class="sub">Copy your login token to paste into the app. Never share it with anyone.</p>
+    <button class="go alt" id="copyTok">Copy my login token</button>
   </section>
 </main>
 
@@ -723,6 +729,17 @@ async function renderStats(){
     fm.textContent = "Finished this month: " + ids.size + " (only titles with a finish date)";
   }catch(_){ fm.textContent = "Couldn't load this month's count. Check your connection."; }
 }
+
+$("#tokenBtn").onclick = () => {
+  const t = $("#tokenIn").value.trim();
+  if(t.length < 20) return msg("That doesn't look like a token. Copy it again from the website.");
+  try{ localStorage.setItem("wn_token", t); }catch(_){}
+  location.reload();
+};
+$("#copyTok").onclick = async () => {
+  try{ await navigator.clipboard.writeText(auth.token || ""); $("#copyTok").textContent = "Copied. Don't share it."; }
+  catch(_){ $("#copyTok").textContent = "Couldn't copy. Try again."; }
+};
 
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 

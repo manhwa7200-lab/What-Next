@@ -1,0 +1,6 @@
+{
+  "appId": "com.whatnext.app",
+  "appName": "What Next?",
+  "webDir": "www",
+  "server": { "androidScheme": "https" }
+}
