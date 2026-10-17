@@ -15,6 +15,7 @@ It's a single `index.html` file with no build step and no dependencies. Host it 
 - **Schedule:** a countdown to the next episode of every airing anime on your list.
 - **Stats:** backlog hours, top genres, titles finished this month, and a daily goal with a streak.
 - **Offline:** installs to your home screen and shows your last saved list when you have no connection.
+- **Chat:** one-to-one private messages with other AniList users, using AniList's own message system.
 - **Login required:** you must log in with your AniList account. There is no guest mode.
 
 ## How picks work
