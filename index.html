@@ -78,7 +78,9 @@ select{width:100%;padding:13px 14px;font:inherit;color:var(--ink);background:var
   <h1>What next?</h1>
   <p class="sub">Tell it how much time you have. It picks from your AniList.</p>
 
-  <div class="tabs" id="tabs">
+  <div class="who" id="whoBar" hidden><span id="whoName">Signed in</span><button id="logout">Log out</button></div>
+
+  <div class="tabs" id="tabs" hidden>
     <button class="chip" data-v="pick" aria-pressed="true">Pick</button>
     <button class="chip" data-v="discover" aria-pressed="false">Discover</button>
     <button class="chip" id="blurBtn" aria-pressed="false">Blur covers</button>
@@ -86,26 +88,20 @@ select{width:100%;padding:13px 14px;font:inherit;color:var(--ink);background:var
 
   <div id="pickWrap">
   <section id="setup">
-    <label for="user">Your AniList username</label>
-    <input id="user" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="username">
-    <button class="go" id="load">Load my list</button>
-
-    <details id="authSetup" class="auth">
-      <summary>Log in with AniList (optional)</summary>
-      <p>Logging in lets the app see private lists and mark episodes or chapters as done on AniList for you.</p>
+    <p class="q">Log in with your AniList account to use the app.</p>
+    <div id="authSetup" class="auth">
+      <p>One-time setup. Make a free AniList app so it can log you in:</p>
       <ol>
         <li>Open <a href="https://anilist.co/settings/developer" target="_blank" rel="noopener">anilist.co/settings/developer</a> and tap <b>Create New Client</b>.</li>
         <li>Name it anything. For Redirect URL, use exactly this address: <code id="redirectUrl"></code></li>
         <li>Save it, then paste the Client ID number below.</li>
       </ol>
       <input id="clientId" inputmode="numeric" autocomplete="off" placeholder="Client ID (numbers only)">
-      <button class="go alt" id="loginBtn">Log in with AniList</button>
-    </details>
+      <button class="go" id="loginBtn">Log in with AniList</button>
+    </div>
   </section>
 
   <section id="app" hidden>
-    <div class="who"><span id="whoName"></span><span><button id="change">Change user</button> <button id="logout" hidden>Log out</button></span></div>
-
     <div class="q">I want to</div>
     <div class="row" id="kinds">
       <button class="chip" data-v="ANIME" aria-pressed="false">Watch</button>
@@ -204,7 +200,6 @@ function msg(text){
 }
 
 async function loadList(user){
-  $("#load").disabled = true;
   msg("Loading your list…");
   try{
     const {res, json} = await gql(QUERY, {u:user});
@@ -220,7 +215,6 @@ async function loadList(user){
     state.items = [...seen.values()];
     state.user = user;
     buildGenres();
-    localStorage.setItem("wn_user", user);
     $("#whoName").textContent = "Signed in as " + user;
     $("#setup").hidden = true; $("#app").hidden = false;
     if(!state.items.length) return msg("Your lists have nothing in Watching, Reading, or Planning yet.");
@@ -228,7 +222,7 @@ async function loadList(user){
     pick();
   }catch(err){
     msg(err.message.includes("Failed to fetch") ? "Couldn't reach AniList. Check your connection and try again." : err.message);
-  }finally{ $("#load").disabled = false; }
+  }
 }
 
 // Work out whether an entry fits the time you have, and what to do.
@@ -311,12 +305,7 @@ function wireChips(id, key){
 }
 wireChips("#kinds", "kind"); wireChips("#times", "time"); wireChips("#genres", "genre"); wireChips("#adult", "adult");
 
-$("#load").onclick = () => { const u = $("#user").value.trim(); if(u) loadList(u); };
-$("#user").addEventListener("keydown", e => { if(e.key === "Enter") $("#load").click(); });
 $("#pickBtn").onclick = () => { state.skipped.clear(); pick(); };
-$("#change").onclick = () => {
-  $("#app").hidden = true; $("#setup").hidden = false; $("#result").replaceChildren(); $("#user").focus();
-};
 
 // ---------- Tabs and cover blur ----------
 function showTab(t){
@@ -427,9 +416,13 @@ async function gql(query, variables){
   return { res, json };
 }
 
+// Logged out: only the login screen. Logged in: tabs and app.
 function syncAuthUI(){
-  $("#logout").hidden = !auth.token;
-  $("#authSetup").hidden = !!auth.token;
+  const on = !!auth.token;
+  $("#whoBar").hidden = !on;
+  $("#tabs").hidden = !on;
+  $("#setup").hidden = on;
+  if(!on){ $("#app").hidden = true; $("#discover").hidden = true; $("#pickWrap").hidden = false; }
 }
 function clearAuth(){
   auth.token = null;
@@ -472,20 +465,23 @@ $("#loginBtn").onclick = () => {
   try{ localStorage.setItem("wn_client", id); }catch(_){}
   location.href = "https://anilist.co/api/v2/oauth/authorize?client_id=" + id + "&response_type=token";
 };
-$("#logout").onclick = () => { clearAuth(); if(state.user) loadList(state.user); };
+$("#logout").onclick = () => {
+  clearAuth();
+  state.items = []; state.user = ""; state.skipped.clear();
+  $("#result").replaceChildren(); $("#dlist").replaceChildren();
+};
 
 (async function start(){
   handleAuthRedirect();
   syncAuthUI();
-  if(auth.token){
-    try{
-      const { json } = await gql("query{Viewer{name}}", {});
-      const name = json.data && json.data.Viewer && json.data.Viewer.name;
-      if(name){ $("#user").value = name; return loadList(name); }
-    }catch(err){ msg(err.message); }
-  }
-  const saved = localStorage.getItem("wn_user");
-  if(saved){ $("#user").value = saved; loadList(saved); }
+  if(!auth.token) return;
+  try{
+    const { json } = await gql("query{Viewer{name}}", {});
+    const name = json.data && json.data.Viewer && json.data.Viewer.name;
+    if(!name) throw new Error("Couldn't read your AniList account. Log out and log in again.");
+    state.user = name;
+    loadList(name);
+  }catch(err){ msg(err.message); syncAuthUI(); }
 })();
 </script>
 </body>
