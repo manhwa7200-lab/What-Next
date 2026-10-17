@@ -423,8 +423,8 @@ input[type=color]{width:46px;height:34px;padding:0;border:0;background:none}
 
     <div class="q">Account</div>
     <div class="card" style="margin-top:0">
-      <p class="sub">Copy your login token to paste into another install. Never share it with anyone.</p>
-      <button class="go alt" id="copyTok">Copy my login token</button>
+      <p class="sub">You're signed in with your AniList account. Logging out clears the login from this device.</p>
+      <button class="go alt" id="logout2">Log out</button>
     </div>
 
     <div class="q">About</div>
@@ -469,21 +469,9 @@ input[type=color]{width:46px;height:34px;padding:0;border:0;background:none}
   <label class="chk" style="margin-top:14px"><input type="checkbox" id="csHideProgress"> Hide progress</label>
 </div>
 
-<div class="qvback" id="needClient" hidden style="z-index:50"><div class="qvbox">
-  <h3 style="margin:0 0 6px">One-time setup</h3>
-  <p class="sub">This build has no AniList client built in yet. Create a free one at <a href="https://anilist.co/settings/developer" target="_blank" rel="noopener" style="color:var(--sakura);font-weight:700">anilist.co/settings/developer</a> and use this Redirect URL:</p>
-  <code id="redirectUrl" style="display:block;margin:10px 0;padding:8px 10px;background:var(--chip);border-radius:12px;font-size:.85rem;word-break:break-all"></code>
-  <input id="clientId" inputmode="numeric" autocomplete="off" placeholder="Client ID (numbers only)">
-  <p class="sub" id="needErr" style="color:var(--sakura);min-height:1.2em"></p>
-  <button class="go" id="saveClient" style="margin-top:4px">Save and log in</button>
-  <details style="margin-top:14px"><summary class="sub" style="cursor:pointer">Have a login token instead?</summary>
-    <input id="tokenIn" autocomplete="off" placeholder="Paste login token" style="margin-top:10px">
-    <button class="go alt" id="tokenBtn">Use this token</button></details>
-  <button class="go alt" id="needClose">Cancel</button>
-</div></div>
-
 <div class="qvback" id="qv" hidden><div class="qvbox" id="qvBox"></div></div>
 
+<script src="config.js"></script>
 <script>
 const $ = s => document.querySelector(s);
 const MIN_PER_CHAPTER = 6; // rough guess for reading speed
@@ -823,8 +811,9 @@ async function markDone(e, p, btn){
 
 // ---------- Login: the client ID is built in, like other AniList apps ----------
 const APP = { version: "2.1.1", company: "Tokyo Brotherhood", creator: "Hariharasuthan Karunakaran", contributor: "Claude (AI)" };
-const CLIENT_WEB = "";   // AniList client ID for the website. Its Redirect URL = your site address.
-const CLIENT_APP = "";   // AniList client ID for the Android app. Its Redirect URL = whatnext://auth
+const CFG0 = window.WN_CONFIG || {};   // set in config.js
+const CLIENT_WEB = String(CFG0.clientWeb || "");
+const CLIENT_APP = String(CFG0.clientApp || "");
 const APP_REDIRECT = "whatnext://auth";
 const isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 const nativePlugin = n => window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins[n];
@@ -833,8 +822,6 @@ function clientId(){
   return (isNative ? CLIENT_APP : CLIENT_WEB) || own;
 }
 function loginErr(t){ $("#loginErr").textContent = t; }
-try{ $("#clientId").value = localStorage.getItem("wn_client") || ""; }catch(_){}
-$("#redirectUrl").textContent = isNative ? APP_REDIRECT : location.origin + location.pathname.replace(/index\.html$/, "");
 function openExternal(url){
   const B = isNative && nativePlugin("Browser");
   if(B && B.open){ try{ return B.open({ url }); }catch(_){} }
@@ -842,7 +829,7 @@ function openExternal(url){
 }
 async function startLogin(){
   const id = clientId();
-  if(!id){ $("#needClient").hidden = false; return; }
+  if(!id) return loginErr("Login isn't set up in this build yet. The developer needs to add the AniList Client ID in config.js.");
   let url = "https://anilist.co/api/v2/oauth/authorize?client_id=" + encodeURIComponent(id) + "&response_type=token";
   if(isNative) url += "&redirect_uri=" + encodeURIComponent(APP_REDIRECT);
   const B = isNative && nativePlugin("Browser");
@@ -851,13 +838,6 @@ async function startLogin(){
 }
 $("#loginBtn").onclick = startLogin;
 $("#registerBtn").onclick = () => openExternal("https://anilist.co/signup");
-$("#needClose").onclick = () => { $("#needClient").hidden = true; };
-$("#saveClient").onclick = () => {
-  const id = $("#clientId").value.trim();
-  if(!/^\d+$/.test(id)) return void ($("#needErr").textContent = "A Client ID is a number from AniList's developer page.");
-  try{ localStorage.setItem("wn_client", id); }catch(_){}
-  $("#needErr").textContent = ""; $("#needClient").hidden = true; startLogin();
-};
 function handleAuthUrl(url){
   if(!url || url.indexOf(APP_REDIRECT.split("://")[0] + "://") !== 0) return;
   const t = new URLSearchParams(url.split("#")[1] || url.split("?")[1] || "").get("access_token");
@@ -873,6 +853,7 @@ if(isNative){
     if(A.getLaunchUrl) A.getLaunchUrl().then(r => r && handleAuthUrl(r.url)).catch(() => {});
   }
 }
+$("#logout2").onclick = () => $("#logout").click();
 $("#logout").onclick = () => {
   clearAuth();
   state.items = []; state.user = ""; state.uid = 0; state.skipped.clear(); lists.anime.entries = lists.manga.entries = null; profLoaded = false;
@@ -1067,16 +1048,6 @@ async function renderStats(){
   }catch(_){ monthB.textContent = "–"; }
 }
 
-$("#tokenBtn").onclick = () => {
-  const t = $("#tokenIn").value.trim().replace(/^Bearer\s+/i, "").replace(/^["']|["']$/g, "").replace(/\s+/g, "");
-  if(t.length < 20) return void ($("#needErr").textContent = "That doesn't look like a token. Copy it again from the website.");
-  try{ localStorage.setItem("wn_token", t); }catch(_){}
-  location.reload();
-};
-$("#copyTok").onclick = async () => {
-  try{ await navigator.clipboard.writeText(auth.token || ""); $("#copyTok").textContent = "Copied. Don't share it."; }
-  catch(_){ $("#copyTok").textContent = "Couldn't copy. Try again."; }
-};
 
 // ---------- Chat: one-to-one AniList private messages ----------
 const chat = { id: 0, name: "", mine: 0, timer: null };

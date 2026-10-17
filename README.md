@@ -40,12 +40,12 @@ It's a single `index.html` file with no build step and no dependencies. Host it 
 3. Wait about a minute, then open your site at `https://<your-username>.github.io/<repo-name>/`.
 
 ### 2. AniList login (one time, for the developer)
-The login button works like other AniList apps: the Client ID is built into the app, so users just tap **Log in with AniList**. Create two clients at [anilist.co/settings/developer](https://anilist.co/settings/developer):
+Login works like other AniList apps: the Client ID is built in, so users just tap **Login**, AniList opens in the browser, and they come back to the app signed in. Create two clients at [anilist.co/settings/developer](https://anilist.co/settings/developer):
 
 - **Website client:** Redirect URL is your site address, for example `https://<your-username>.github.io/<repo-name>/`.
 - **Android client:** Redirect URL is `whatnext://auth`.
 
-Put the two Client IDs in `CLIENT_WEB` and `CLIENT_APP` near the top of the login code in `index.html`. Client IDs are public, not secrets. If they are left empty, users can enter their own Client ID under **Advanced login options**.
+Put the two Client IDs in `config.js` (`clientWeb` and `clientApp`). Client IDs are public, not secrets.
 
 ### 3. Log in
 Tap **Log in with AniList** and approve. In the Android app the browser returns you to the app automatically. Advanced options also let you paste a login token.
