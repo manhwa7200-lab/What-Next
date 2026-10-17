@@ -127,6 +127,9 @@ a.link{display:inline-block;margin-top:14px;color:var(--sakura);font-weight:700;
 .bar .tr{flex:1;height:10px;background:var(--chip);border-radius:6px;overflow:hidden}
 .bar .tr i{height:100%}
 .bar em{font-style:normal;color:var(--muted);width:38px;text-align:right;flex:none;font-size:.8rem}
+.log{white-space:pre-wrap;max-height:240px;overflow:auto;font:12px/1.45 ui-monospace,Menlo,monospace;background:var(--chip);border-radius:14px;padding:12px;margin-top:12px}
+.chk{display:flex;align-items:center;gap:10px;text-transform:none;letter-spacing:0;font-size:.95rem;color:var(--ink);font-weight:600}
+input[type=checkbox]{width:auto;accent-color:var(--sakura)}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -261,6 +264,33 @@ a.link{display:inline-block;margin-top:14px;color:var(--sakura);font-weight:700;
   </section>
 
   <section id="more" hidden>
+    <div class="q">Anime sync to Discord</div>
+    <div class="card" style="margin-top:0">
+      <p class="sub" id="syncStatus">Never synced.</p>
+      <button class="go" id="syncNow">Sync now</button>
+      <pre class="log" id="syncLog" hidden></pre>
+    </div>
+    <details class="filt" id="cfgBox"><summary>Settings: Discord and secrets</summary>
+      <label for="cfgSource">Source AniList username</label>
+      <input id="cfgSource" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="defaults to your login">
+      <label for="cfgHook">Anime webhook (forum channel)</label>
+      <input id="cfgHook" type="password" autocomplete="off" placeholder="https://discord.com/api/webhooks/...">
+      <label for="cfgVipHook">VIP webhook (optional)</label>
+      <input id="cfgVipHook" type="password" autocomplete="off" placeholder="https://discord.com/api/webhooks/...">
+      <label for="cfgVipList">VIP titles (comma separated)</label>
+      <input id="cfgVipList" autocomplete="off" placeholder="One Piece, Detective Conan">
+      <label for="cfgLogHook">Log webhook (optional)</label>
+      <input id="cfgLogHook" type="password" autocomplete="off" placeholder="https://discord.com/api/webhooks/...">
+      <label for="cfgLists">Lists that get their own thread (comma separated)</label>
+      <input id="cfgLists" autocomplete="off">
+      <label class="chk"><input type="checkbox" id="cfgWrite"> Copy progress to my logged-in account</label>
+      <label class="chk"><input type="checkbox" id="cfgAuto"> Sync when the app opens (every 3 hours)</label>
+      <button class="go" id="cfgSave">Save settings</button>
+      <button class="go alt" id="cfgTest">Send test message</button>
+      <button class="go alt" id="cfgReset">Reset sync memory</button>
+      <p class="sub" style="margin-top:12px">Everything is stored only on this device. Resetting memory makes the next sync a silent baseline.</p>
+    </details>
+
     <div class="q">Privacy</div>
     <button class="chip" id="blurBtn" aria-pressed="false">Blur covers</button>
     <div class="q">Hidden titles</div>
@@ -450,7 +480,7 @@ function showTab(t){
   const ids = { pick: "#pickWrap", discover: "#discover", schedule: "#schedule", stats: "#stats", chat: "#chat", more: "#more" };
   for(const k in ids) $(ids[k]).hidden = k !== t;
   document.querySelectorAll("#tabs .tab").forEach(c => c.setAttribute("aria-pressed", String(c.dataset.v === t)));
-  if(t === "more") $("#hideCount").textContent = hide.size ? hide.size + " hidden title(s)." : "No hidden titles.";
+  if(t === "more"){ $("#hideCount").textContent = hide.size ? hide.size + " hidden title(s)." : "No hidden titles."; fillCfg(); renderSyncStatus(); }
   if(t === "discover" && !$("#dlist").children.length) discover(false);
   if(t === "schedule") renderSchedule();
   if(t === "stats") renderStats();
@@ -894,6 +924,152 @@ $("#chatUser").addEventListener("keydown", e => { if(e.key === "Enter") openChat
 $("#chatSend").onclick = sendMsg;
 $("#chatBack").onclick = () => { stopChatTimer(); chat.id = 0; $("#chatRoom").hidden = true; $("#chatHome").hidden = false; renderRecent(); };
 
+// ---------- Sync engine (anime): AniList list -> Discord ----------
+const CFG_KEY = "wn_cfg", SYNC_KEY = "wn_sync_anime";
+const DEFAULT_LISTS = "anime movies, iseki, isekai, milf, loli, rom com, plan to continue, hentai, favourite, fav, planning";
+const DEFAULT_VIP = "One Piece, Detective Conan, Kono Suba, Dragon Ball Z";
+const SYNC_Q = "query($u:String,$p:Int){Page(page:$p,perPage:50){pageInfo{hasNextPage} mediaList(userName:$u,type:ANIME,sort:[UPDATED_TIME_DESC]){updatedAt mediaId progress score(format:POINT_100) status customLists media{title{romaji english} type format episodes duration genres tags{name} coverImage{extraLarge color} nextAiringEpisode{airingAt episode}}}}}";
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+let syncing = false;
+
+function cfg(){ try{ return JSON.parse(localStorage.getItem(CFG_KEY) || "{}"); }catch(_){ return {}; } }
+function loadSync(){ try{ return JSON.parse(localStorage.getItem(SYNC_KEY) || "{}"); }catch(_){ return {}; } }
+function saveSync(d){ try{ localStorage.setItem(SYNC_KEY, JSON.stringify(d)); }catch(_){} }
+function slog(t){ const p = $("#syncLog"); p.hidden = false; p.textContent += t + "\n"; p.scrollTop = p.scrollHeight; }
+const titleCase = x => String(x).replace(/\w\S*/g, w => w[0].toUpperCase() + w.slice(1).toLowerCase());
+
+function fillCfg(){
+  const c = cfg();
+  $("#cfgSource").value = c.source || ""; $("#cfgSource").placeholder = state.user || "your AniList username";
+  $("#cfgHook").value = c.hook || ""; $("#cfgVipHook").value = c.vipHook || ""; $("#cfgLogHook").value = c.logHook || "";
+  $("#cfgVipList").value = c.vipList != null ? c.vipList : DEFAULT_VIP;
+  $("#cfgLists").value = c.lists != null ? c.lists : DEFAULT_LISTS;
+  $("#cfgWrite").checked = !!c.write; $("#cfgAuto").checked = !!c.auto;
+}
+function renderSyncStatus(){
+  const st = loadSync();
+  $("#syncStatus").textContent = st.last_run ? "Last sync: " + new Date(st.last_run).toLocaleString() + " · " + Object.keys(st.sync || {}).length + " titles remembered" : "Never synced. The first run only builds a baseline and sends nothing.";
+}
+function hookOk(h){ return !h || /^https:\/\/(discord|discordapp)\.com\/api\/webhooks\//.test(h); }
+$("#cfgSave").onclick = () => {
+  const c = { source: $("#cfgSource").value.trim(), hook: $("#cfgHook").value.trim(), vipHook: $("#cfgVipHook").value.trim(), logHook: $("#cfgLogHook").value.trim(),
+    vipList: $("#cfgVipList").value, lists: $("#cfgLists").value, write: $("#cfgWrite").checked, auto: $("#cfgAuto").checked };
+  if(![c.hook, c.vipHook, c.logHook].every(hookOk)){ $("#syncStatus").textContent = "One of the webhooks isn't a Discord webhook link."; return; }
+  try{ localStorage.setItem(CFG_KEY, JSON.stringify(c)); $("#syncStatus").textContent = "Settings saved on this device."; }
+  catch(_){ $("#syncStatus").textContent = "Couldn't save settings."; }
+};
+$("#cfgReset").onclick = () => { try{ localStorage.removeItem(SYNC_KEY); }catch(_){} renderSyncStatus(); $("#syncLog").hidden = true; };
+$("#cfgTest").onclick = async () => {
+  const h = $("#cfgHook").value.trim();
+  if(!h || !hookOk(h)) return void ($("#syncStatus").textContent = "Enter a valid anime webhook first.");
+  try{ await discord(h, { content: "✅ What Next? can reach this webhook." }); $("#syncStatus").textContent = "Test message sent. Check Discord."; }
+  catch(e2){ $("#syncStatus").textContent = "Test failed: " + e2.message; }
+};
+
+async function discord(hook, body, params){
+  const q = new URLSearchParams(params || {}).toString();
+  const res = await fetch(hook + (q ? (hook.includes("?") ? "&" : "?") + q : ""), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  if(!res.ok) throw new Error("Discord answered " + res.status);
+  return res.status === 204 ? {} : res.json().catch(() => ({}));
+}
+async function threadFor(list, st, c){
+  const lists = (c.lists != null ? c.lists : DEFAULT_LISTS).split(",").map(x => x.trim().toLowerCase()).filter(Boolean);
+  const name = lists.includes(String(list || "Unknown").toLowerCase().trim()) ? titleCase(list) : "General Updates";
+  const key = "[ANIME] " + name;
+  if(st.threads[key]) return st.threads[key];
+  const r = await discord(c.hook, { content: "📡 **" + name + "** | ANIME Telemetry Dashboard", thread_name: key }, { wait: "true" });
+  const id = String(r.channel_id || r.id || "");
+  if(!id) throw new Error("Discord returned no thread ID. Is this a forum channel webhook?");
+  st.threads[key] = id; saveSync(st); return id;
+}
+function category(it){
+  const m = it.media, d = [...(m.genres || []), ...(m.tags || []).map(t => t.name)].map(x => String(x).toLowerCase());
+  const active = Object.keys(it.customLists || {}).filter(k => it.customLists[k]);
+  if(active.length) return active[0];
+  if(m.format === "MOVIE") return "Anime movies";
+  if(d.includes("isekai")) return "Iseki";
+  if(["hentai", "ecchi", "adult", "smut"].some(x => d.includes(x))) return "Hentai";
+  if(["milf", "older woman", "mother"].some(x => d.includes(x))) return "Milf";
+  if(d.includes("loli")) return "Loli";
+  return titleCase((it.status || "UNKNOWN").replace(/_/g, " "));
+}
+function weekKey(){
+  const d = new Date(), t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())), day = t.getUTCDay() || 7;
+  t.setUTCDate(t.getUTCDate() + 4 - day);
+  const y = t.getUTCFullYear(), w = Math.ceil(((t - Date.UTC(y, 0, 1)) / 86400000 + 1) / 7);
+  return y + "-W" + String(w).padStart(2, "0");
+}
+
+async function runSync(){
+  if(syncing) return;
+  const c = cfg(), src = (c.source || state.user || "").trim();
+  $("#syncLog").textContent = "";
+  if(!src) return slog("Set a source AniList username in Settings.");
+  if(!c.hook) return slog("Add your anime Discord webhook in Settings first.");
+  syncing = true; $("#syncNow").disabled = true;
+  const st = loadSync(); st.sync = st.sync || {}; st.threads = st.threads || {};
+  const first = !st.last_update; let highest = st.last_update || 0, sent = 0, failed = 0;
+  slog(first ? "First run: building a silent baseline. Nothing is sent to Discord." : "Checking " + src + " for changes…");
+  try{
+    const items = []; let page = 1, more = true;
+    while(more){
+      const { json } = await gql(SYNC_Q, { u: src, p: page });
+      const d = json.data && json.data.Page;
+      if(!d) throw new Error(json.errors ? json.errors[0].message : "AniList returned no data");
+      more = d.pageInfo.hasNextPage;
+      for(const it of d.mediaList){
+        if(!it || !it.media) continue;
+        if(!first && it.updatedAt <= (st.last_update || 0)){ more = false; break; }
+        if(it.updatedAt > highest) highest = it.updatedAt;
+        items.push(it);
+      }
+      page++; if(more) await sleep(1000);
+    }
+    slog("Read " + items.length + " list entries.");
+    const vips = (c.vipList != null ? c.vipList : DEFAULT_VIP).split(",").map(x => x.trim().toLowerCase()).filter(Boolean);
+    for(const it of items){
+      const id = String(it.mediaId), progress = it.progress || 0, m = it.media;
+      if(!(id in st.sync)){ st.sync[id] = progress; continue; }
+      const prev = st.sync[id];
+      if(progress <= prev){ st.sync[id] = progress; continue; }
+      const done = it.status === "COMPLETED", g = (progress - prev) * 10 + (done ? 100 : 0);
+      if(!st.weekly || st.weekly.week !== weekKey()) st.weekly = { week: weekKey(), g: 0 };
+      st.weekly.g += g; st.points = (st.points || 0) + g;
+      const title = m.title.english || m.title.romaji || "Unknown", romaji = m.title.romaji || "N/A";
+      const color = m.coverImage && m.coverImage.color ? parseInt(m.coverImage.color.replace("#", ""), 16) : 3447003;
+      const left = m.episodes != null ? m.episodes - progress : "?";
+      const embed = { title: ("UPDATE: " + title).slice(0, 256), color,
+        author: { name: done ? "🏆 " + g + "G EARNED | SERIES COMPLETED" : "🎮 +" + g + "G | Weekly: " + st.weekly.g + "G" },
+        fields: [{ name: "🇯🇵 Romaji", value: romaji }, { name: "📊 Status", value: it.status || "UNKNOWN" },
+          { name: "✅ Progress", value: String(progress), inline: true }, { name: "⏳ Left", value: String(left), inline: true }],
+        image: m.coverImage && m.coverImage.extraLarge ? { url: m.coverImage.extraLarge } : undefined };
+      try{
+        const tid = await threadFor(category(it), st, c);
+        await discord(c.hook, { embeds: [embed] }, { thread_id: tid }); await sleep(2000);
+        const names = (romaji + " " + (m.title.english || "")).toLowerCase();
+        if(c.vipHook && vips.some(v => names.includes(v))){
+          await discord(c.vipHook, { embeds: [{ ...embed, title: "⭐ VIP UPDATE: " + title, description: "S-Tier Franchise Update." }] }); await sleep(2000);
+        }
+        sent++; slog("Sent: " + title + " → " + progress);
+      }catch(e2){ failed++; slog("Discord failed for " + title + ": " + e2.message); }
+      if(c.write && auth.token && src.toLowerCase() !== String(state.user).toLowerCase()){
+        try{ await gql("mutation($id:Int,$p:Int,$s:Int){SaveMediaListEntry(mediaId:$id,progress:$p,scoreRaw:$s){id}}", { id: it.mediaId, p: progress, s: it.score || 0 }); }
+        catch(e3){ slog("Copy to your account failed for " + title + ": " + e3.message); }
+      }
+      st.sync[id] = progress;
+    }
+    st.last_update = highest; st.last_run = Date.now(); saveSync(st);
+    slog("Done. " + sent + " sent, " + failed + " failed." + (first ? " Baseline saved." : ""));
+    if(c.logHook){ try{ await discord(c.logHook, { embeds: [{ title: "Anime sync finished", description: sent + " update(s) sent, " + failed + " failed.", color: 3447003 }] }); }catch(_){} }
+  }catch(e2){ slog("Sync stopped: " + e2.message); }
+  finally{ syncing = false; $("#syncNow").disabled = false; renderSyncStatus(); }
+}
+function maybeAutoSync(){
+  const c = cfg(); if(!c.auto || !c.hook) return;
+  if(Date.now() - (loadSync().last_run || 0) > 3 * 3600 * 1000) runSync();
+}
+$("#syncNow").onclick = runSync;
+
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 
 (async function start(){
@@ -907,6 +1083,7 @@ if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch
     state.user = name; state.uid = json.data.Viewer.id;
     try{ localStorage.setItem("wn_name", name); }catch(_){}
     loadList(name);
+    setTimeout(maybeAutoSync, 3000);
   }catch(err){
     const cn = localStorage.getItem("wn_name");
     if(cn && auth.token){ state.user = cn; return loadList(cn); }
