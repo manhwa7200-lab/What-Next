@@ -64,6 +64,12 @@ select{width:100%;padding:13px 14px;font:inherit;color:var(--ink);background:var
 .item p{margin:0;color:var(--muted);font-size:.9rem}
 .item a{display:inline-block;margin-top:6px;font-weight:700;color:var(--sakura)}
 .blur img{filter:blur(14px)}
+.auth{margin-top:18px;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:12px 16px}
+.auth summary{font-weight:700;cursor:pointer}
+.auth p,.auth li{color:var(--muted);font-size:.92rem}
+.auth ol{padding-left:20px;margin:8px 0 12px}
+.auth code{display:block;margin:6px 0;padding:8px 10px;background:var(--chip);border-radius:10px;font-size:.85rem;word-break:break-all;color:var(--ink)}
+.auth a{color:var(--sakura);font-weight:700}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -83,10 +89,22 @@ select{width:100%;padding:13px 14px;font:inherit;color:var(--ink);background:var
     <label for="user">Your AniList username</label>
     <input id="user" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="username">
     <button class="go" id="load">Load my list</button>
+
+    <details id="authSetup" class="auth">
+      <summary>Log in with AniList (optional)</summary>
+      <p>Logging in lets the app see private lists and mark episodes or chapters as done on AniList for you.</p>
+      <ol>
+        <li>Open <a href="https://anilist.co/settings/developer" target="_blank" rel="noopener">anilist.co/settings/developer</a> and tap <b>Create New Client</b>.</li>
+        <li>Name it anything. For Redirect URL, use exactly this address: <code id="redirectUrl"></code></li>
+        <li>Save it, then paste the Client ID number below.</li>
+      </ol>
+      <input id="clientId" inputmode="numeric" autocomplete="off" placeholder="Client ID (numbers only)">
+      <button class="go alt" id="loginBtn">Log in with AniList</button>
+    </details>
   </section>
 
   <section id="app" hidden>
-    <div class="who"><span id="whoName"></span><button id="change">Change user</button></div>
+    <div class="who"><span id="whoName"></span><span><button id="change">Change user</button> <button id="logout" hidden>Log out</button></span></div>
 
     <div class="q">I want to</div>
     <div class="row" id="kinds">
@@ -189,12 +207,7 @@ async function loadList(user){
   $("#load").disabled = true;
   msg("Loading your list…");
   try{
-    const res = await fetch("https://graphql.anilist.co", {
-      method:"POST",
-      headers:{"Content-Type":"application/json","Accept":"application/json"},
-      body:JSON.stringify({query:QUERY, variables:{u:user}})
-    });
-    const json = await res.json();
+    const {res, json} = await gql(QUERY, {u:user});
     if(json.errors && !json.data?.anime && !json.data?.manga){
       throw new Error(res.status === 404 ? "User not found. Check the spelling of your username." : "AniList said: " + json.errors[0].message);
     }
@@ -234,7 +247,7 @@ function plan(e){
   return {
     isAnime, n, minutes: Math.round(n * unit),
     action: (isAnime ? "Watch episode " : "Read chapter ") + range,
-    progress: e.progress, total: isAnime ? m.episodes : m.chapters
+    progress: e.progress, to, total: isAnime ? m.episodes : m.chapters
   };
 }
 
@@ -278,7 +291,14 @@ function show({e,p}){
   card.append(img, body);
   const again = document.createElement("button"); again.className = "go alt"; again.textContent = "Show me another";
   again.onclick = () => { state.skipped.add(m.id); pick(); };
-  $("#result").replaceChildren(card, again);
+  const nodes = [card];
+  if(auth.token){
+    const mark = document.createElement("button"); mark.className = "go"; mark.textContent = "Mark as done on AniList";
+    mark.onclick = () => markDone(e, p, mark);
+    nodes.push(mark);
+  }
+  nodes.push(again);
+  $("#result").replaceChildren(...nodes);
 }
 
 function wireChips(id, key){
@@ -373,12 +393,7 @@ async function discover(append){
     if(dState.adult === "HIDE") vars.adult = false;
     const g = $("#dgenre").value; if(g) vars.genre = g;
     const q = $("#dq").value.trim(); if(q) vars.search = q;
-    const res = await fetch("https://graphql.anilist.co", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      body: JSON.stringify({ query: DQ, variables: vars })
-    });
-    const json = await res.json();
+    const { json } = await gql(DQ, vars);
     if(json.errors && !json.data?.Page) throw new Error("AniList said: " + json.errors[0].message);
     const page = json.data.Page;
     if(!append) list.replaceChildren();
@@ -399,8 +414,79 @@ $("#dgo").onclick = () => discover(false);
 $("#dmore").onclick = () => { dState.page++; discover(true); };
 $("#dq").addEventListener("keydown", e => { if(e.key === "Enter") discover(false); });
 
-const saved = localStorage.getItem("wn_user");
-if(saved){ $("#user").value = saved; loadList(saved); }
+// ---------- AniList login (implicit grant: token comes back in the URL hash) ----------
+const auth = { token: null };
+try{ auth.token = localStorage.getItem("wn_token"); }catch(_){}
+
+async function gql(query, variables){
+  const headers = { "Content-Type": "application/json", "Accept": "application/json" };
+  if(auth.token) headers.Authorization = "Bearer " + auth.token;
+  const res = await fetch("https://graphql.anilist.co", { method: "POST", headers, body: JSON.stringify({ query, variables }) });
+  const json = await res.json();
+  if(res.status === 401 && auth.token){ clearAuth(); throw new Error("Your login expired. Log in again."); }
+  return { res, json };
+}
+
+function syncAuthUI(){
+  $("#logout").hidden = !auth.token;
+  $("#authSetup").hidden = !!auth.token;
+}
+function clearAuth(){
+  auth.token = null;
+  try{ localStorage.removeItem("wn_token"); }catch(_){}
+  syncAuthUI();
+}
+function handleAuthRedirect(){
+  const t = new URLSearchParams(location.hash.replace(/^#/, "")).get("access_token");
+  if(!t) return;
+  auth.token = t;
+  try{ localStorage.setItem("wn_token", t); }catch(_){}
+  history.replaceState(null, "", location.pathname + location.search);
+}
+
+async function markDone(e, p, btn){
+  btn.disabled = true; btn.textContent = "Saving…";
+  try{
+    const vars = { id: e.media.id, p: p.to };
+    if(p.total && p.to >= p.total) vars.s = "COMPLETED";
+    else if(e.status === "PLANNING") vars.s = "CURRENT";
+    const { json } = await gql(
+      "mutation($id:Int,$p:Int,$s:MediaListStatus){SaveMediaListEntry(mediaId:$id,progress:$p,status:$s){id progress status}}", vars);
+    if(json.errors) throw new Error(json.errors[0].message);
+    const saved = json.data.SaveMediaListEntry;
+    e.progress = saved.progress; e.status = saved.status;
+    state.skipped.clear(); pick();
+    const t = document.createElement("div"); t.className = "msg";
+    t.textContent = "Saved to AniList: " + (e.media.title.english || e.media.title.romaji) + " is now at " + saved.progress + ". Here's the next pick.";
+    $("#result").prepend(t);
+  }catch(err){
+    btn.disabled = false; btn.textContent = "Couldn't save: " + err.message;
+  }
+}
+
+try{ $("#clientId").value = localStorage.getItem("wn_client") || ""; }catch(_){}
+$("#redirectUrl").textContent = location.origin + location.pathname.replace(/index\.html$/, "");
+$("#loginBtn").onclick = () => {
+  const id = $("#clientId").value.trim();
+  if(!/^\d+$/.test(id)) return msg("Enter your Client ID first. It's a number from AniList's developer page.");
+  try{ localStorage.setItem("wn_client", id); }catch(_){}
+  location.href = "https://anilist.co/api/v2/oauth/authorize?client_id=" + id + "&response_type=token";
+};
+$("#logout").onclick = () => { clearAuth(); if(state.user) loadList(state.user); };
+
+(async function start(){
+  handleAuthRedirect();
+  syncAuthUI();
+  if(auth.token){
+    try{
+      const { json } = await gql("query{Viewer{name}}", {});
+      const name = json.data && json.data.Viewer && json.data.Viewer.name;
+      if(name){ $("#user").value = name; return loadList(name); }
+    }catch(err){ msg(err.message); }
+  }
+  const saved = localStorage.getItem("wn_user");
+  if(saved){ $("#user").value = saved; loadList(saved); }
+})();
 </script>
 </body>
 </html>
