@@ -1,8 +1,9 @@
-const C = "wn-v1";
-self.addEventListener("install", e => { e.waitUntil(caches.open(C).then(c => c.addAll(["./", "./index.html"]))); self.skipWaiting(); });
-self.addEventListener("activate", e => e.waitUntil(clients.claim()));
+const C = "wn-v211";
+const FILES = ["./", "index.html", "boot.js", "config.js", "manifest.webmanifest", "assets/icon.svg", "css/base.css", "css/components.css", "css/screens.css", "css/login.css", "css/trending.css", "css/media.css", "css/utilities.css", "views/shell/header.html", "views/shell/tabs.html", "views/screens/login.html", "views/screens/pick.html", "views/screens/discover.html", "views/screens/chat.html", "views/screens/schedule.html", "views/screens/stats.html", "views/screens/lists.html", "views/screens/profile.html", "views/settings/menu.html", "views/settings/app.html", "views/settings/anilist.html", "views/settings/lists.html", "views/settings/sync.html", "views/settings/account.html", "views/settings/about.html", "views/sheets/filter.html", "views/sheets/customise.html", "views/sheets/overlays.html", "js/core/core.js", "js/core/tabs.js", "js/features/discover.js", "js/core/auth.js", "js/features/pick-extras.js", "js/features/schedule-stats.js", "js/features/chat.js", "js/features/sync.js", "js/features/lists.js", "js/features/profile.js", "js/core/theme.js", "js/features/media.js", "js/features/editor.js", "js/features/trending.js", "js/features/settings.js", "js/core/start.js"];
+self.addEventListener("install", e => { e.waitUntil(caches.open(C).then(c => Promise.all(FILES.map(f => c.add(f).catch(() => {}))))); self.skipWaiting(); });
+self.addEventListener("activate", e => e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== C).map(k => caches.delete(k)))).then(() => clients.claim())));
 self.addEventListener("fetch", e => {
   if(e.request.method !== "GET" || new URL(e.request.url).origin !== location.origin) return;
   e.respondWith(fetch(e.request).then(r => { const cp = r.clone(); caches.open(C).then(c => c.put(e.request, cp)); return r; })
-    .catch(() => caches.match(e.request).then(r => r || caches.match("./index.html"))));
+    .catch(() => caches.match(e.request).then(r => r || caches.match("index.html"))));
 });

@@ -1,0 +1,35 @@
+<section id="setSync" hidden>
+  <button class="back" data-go="settings">← Settings</button>
+  <h2 class="ph">Discord Sync</h2>
+  <div class="card" style="margin-top:16px">
+    <p class="sub" id="syncStatus" style="white-space:pre-line">Never synced.</p>
+    <div class="row" style="margin-top:12px">
+      <button class="go" id="syncNow" style="margin:0;flex:1 1 0;width:auto">Sync anime</button>
+      <button class="go" id="syncNowManga" style="margin:0;flex:1 1 0;width:auto">Sync manga</button>
+    </div>
+    <pre class="log" id="syncLog" hidden></pre>
+  </div>
+  <div class="card">
+    <label for="cfgSource" style="margin-top:0">Source AniList username</label>
+    <input id="cfgSource" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="defaults to your login">
+    <label for="cfgHook">Anime webhook (forum channel)</label>
+    <input id="cfgHook" type="password" autocomplete="off" placeholder="https://discord.com/api/webhooks/...">
+    <label for="cfgMangaHook">Manga webhook (forum channel)</label>
+    <input id="cfgMangaHook" type="password" autocomplete="off" placeholder="https://discord.com/api/webhooks/...">
+    <label for="cfgVipHook">VIP webhook (optional)</label>
+    <input id="cfgVipHook" type="password" autocomplete="off" placeholder="https://discord.com/api/webhooks/...">
+    <label for="cfgVipList">VIP titles (comma separated)</label>
+    <input id="cfgVipList" autocomplete="off" placeholder="One Piece, Detective Conan">
+    <label for="cfgLogHook">Log webhook (optional)</label>
+    <input id="cfgLogHook" type="password" autocomplete="off" placeholder="https://discord.com/api/webhooks/...">
+    <label for="cfgLists">Lists that get their own thread (comma separated)</label>
+    <input id="cfgLists" autocomplete="off">
+    <label class="chk"><input type="checkbox" id="cfgWrite"> Copy progress to my logged-in account</label>
+    <label class="chk"><input type="checkbox" id="cfgAuto"> Sync when the app opens (every 3 hours)</label>
+    <button class="go" id="cfgSave">Save settings</button>
+    <button class="go alt" id="cfgTest">Test anime webhook</button>
+    <button class="go alt" id="cfgTestManga">Test manga webhook</button>
+    <button class="go alt" id="cfgReset">Reset sync memory</button>
+    <p class="sub" style="margin-top:12px">Webhooks are stored only on this device. Resetting memory makes the next sync a silent baseline.</p>
+  </div>
+</section>

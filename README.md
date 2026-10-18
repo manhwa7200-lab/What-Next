@@ -70,6 +70,34 @@ Tap **Log in with AniList** and approve. In the Android app the browser returns 
 
 Plain HTML, CSS, and JavaScript, using the [AniList GraphQL API](https://docs.anilist.co/).
 
+## Project structure (where to edit)
+
+The app is split into folders, so one problem area can be fixed without touching the rest.
+
+```
+index.html          thin shell
+boot.js             loads the screens and scripts in order
+config.js           AniList client IDs
+sw.js               offline support
+manifest.webmanifest
+assets/             icon
+css/                base, components, screens, login, trending, media, utilities
+views/
+  shell/            header, tab bar
+  screens/          login, pick, discover, chat, schedule, stats, lists, profile
+  settings/         menu and one file per settings page
+  sheets/           filter sheet, customise sheet, media page and editor containers
+js/
+  core/             core and Pick engine, tabs, auth, theme, start
+  features/         discover, lists, media page, editor, sync, chat, settings, and so on
+```
+
+If you add a new screen or script file, add it to the lists inside `boot.js` and `sw.js`.
+
+## Getting the files into your repo from a phone
+
+GitHub's phone upload can't take folders. Upload the single file `site.zip` to the repo root instead. The `Unpack site.zip` workflow (`.github/workflows/unpack-site.yml`) unzips it into the folders above, deletes the zip, and commits. In the APK repo it also starts the APK build.
+
 ## Credits
 
 - Company: Tokyo Brotherhood

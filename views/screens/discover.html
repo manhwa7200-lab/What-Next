@@ -1,0 +1,32 @@
+<section id="discover" hidden>
+    <div class="row" id="dmode">
+      <button class="chip" data-v="browse" aria-pressed="true">Browse</button>
+      <button class="chip" data-v="foryou" aria-pressed="false">For you</button>
+      <button class="chip" data-v="redis" aria-pressed="false">Rediscover</button>
+    </div>
+    <label for="dq">Search</label>
+    <input id="dq" autocomplete="off" placeholder="Title (optional)">
+    <div class="q">Type</div>
+    <div class="row" id="dtype">
+      <button class="chip" data-v="ANIME" aria-pressed="true">Anime</button>
+      <button class="chip" data-v="MANGA" aria-pressed="false">Manga</button>
+    </div>
+    <div class="q">Content</div>
+    <div class="row" id="dadult">
+      <button class="chip" data-v="ALL" aria-pressed="false">Everything</button>
+      <button class="chip" data-v="ONLY" aria-pressed="true">18+ only</button>
+      <button class="chip" data-v="HIDE" aria-pressed="false">Hide 18+</button>
+    </div>
+    <label for="dgenre">Genre</label>
+    <select id="dgenre"></select>
+    <label for="dsort">Sort by</label>
+    <select id="dsort">
+      <option value="TRENDING_DESC">Trending now</option>
+      <option value="POPULARITY_DESC">Most popular</option>
+      <option value="SCORE_DESC">Top rated</option>
+      <option value="START_DATE_DESC">Newest</option>
+    </select>
+    <button class="go" id="dgo">Find titles</button>
+    <div id="dlist" aria-live="polite"></div>
+    <button class="go alt" id="dmore" hidden>Load more</button>
+  </section>

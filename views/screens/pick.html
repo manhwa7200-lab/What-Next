@@ -1,0 +1,41 @@
+<div id="pickWrap">
+
+  <section id="app" hidden>
+    <details class="filt" id="filt"><summary id="filtSum">Filters</summary>
+    <div class="q">I want to</div>
+    <div class="row" id="kinds">
+      <button class="chip" data-v="ANIME" aria-pressed="false">Watch</button>
+      <button class="chip" data-v="MANGA" aria-pressed="false">Read</button>
+      <button class="chip" data-v="BOTH" aria-pressed="true">Either</button>
+    </div>
+
+    <div class="q">I have</div>
+    <div class="row" id="times">
+      <button class="chip" data-v="15" aria-pressed="false">15 min</button>
+      <button class="chip" data-v="30" aria-pressed="true">30 min</button>
+      <button class="chip" data-v="60" aria-pressed="false">1 hour</button>
+      <button class="chip" data-v="120" aria-pressed="false">2 hours</button>
+    </div>
+
+    <div class="q">Genre</div>
+    <div class="row" id="genres"></div>
+
+    <div class="q">Content</div>
+    <div class="row" id="adult">
+      <button class="chip" data-v="ALL" aria-pressed="true">Everything</button>
+      <button class="chip" data-v="ONLY" aria-pressed="false">18+ only</button>
+      <button class="chip" data-v="HIDE" aria-pressed="false">Hide 18+</button>
+    </div>
+
+    </details>
+
+    <button class="go" id="pickBtn">Pick for me</button>
+    <div class="row"><button class="chip" id="spinBtn">Surprise me</button><button class="chip" id="lineupBtn">Build a lineup</button></div>
+  </section>
+
+  <div id="result" aria-live="polite"></div>
+  <section id="trend" hidden>
+    <div class="q">Trending anime right now</div><div class="trend" id="trendAnime"></div>
+    <div class="q">Trending manga right now</div><div class="trend" id="trendManga"></div>
+  </section>
+  </div>

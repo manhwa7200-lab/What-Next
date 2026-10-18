@@ -1,0 +1,10 @@
+/* css/utilities.css: hidden rule and settings menu styles */
+[hidden]{display:none!important}
+.rowlink .rl{display:flex;align-items:center;gap:16px}
+.rowlink svg{width:26px;height:26px;fill:none;stroke:var(--ink);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.rowlink b{display:block}
+.rowlink small{display:block;color:var(--muted);font-weight:500;font-size:.85rem;margin-top:2px}
+.setgroup{margin-top:6px}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-weight:600}
+.switch:last-of-type{border-bottom:0}
+.switch input{width:auto}

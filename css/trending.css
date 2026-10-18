@@ -1,0 +1,16 @@
+/* css/trending.css: trending carousels and genre tags */
+button.hlink{background:none;border:0;padding:0;text-align:left;cursor:pointer;font:inherit;font-weight:700;font-size:.85rem;color:#fff;opacity:.9}
+input[type=range]{padding:0;border:0;background:none;accent-color:var(--sakura)}
+.trend{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 2px 10px;scrollbar-width:none}
+.tcard{flex:0 0 86%;scroll-snap-align:start;border:0;padding:0;text-align:left;background:var(--card);border-radius:26px;overflow:hidden;box-shadow:var(--shadow);cursor:pointer;color:var(--ink);font:inherit}
+.ttop{position:relative;display:flex;gap:14px;padding:18px;min-height:210px;color:#fff;align-items:flex-end;overflow:hidden}
+.tbg,.mbg{position:absolute;inset:-24px;background-size:cover;background-position:center;filter:blur(18px) brightness(.5) saturate(1.2)}
+.tposter{position:relative;width:104px;aspect-ratio:2/3;object-fit:cover;border-radius:14px;box-shadow:0 10px 24px rgba(0,0,0,.5);flex:none;background:#222}
+.tinfo{position:relative;display:flex;flex-direction:column;gap:4px;min-width:0}
+.tt2{font-size:1.1rem;line-height:1.15;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.tsub{font-size:.85rem;opacity:.85}
+.tstats{display:flex;gap:14px;font-weight:700;font-size:.9rem}
+.tbody{padding:14px 16px 16px}
+.gtags{display:flex;gap:6px;flex-wrap:wrap}
+.gtag{padding:5px 11px;border-radius:8px;font-size:.78rem;font-weight:700;color:#fff}
+.tdesc{margin:10px 0 0;font-size:.88rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}

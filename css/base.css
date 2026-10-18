@@ -1,0 +1,31 @@
+/* css/base.css: colours, page, header, text and form basics */
+:root{
+  --bg:#F4F4FA; --card:#FFFFFF; --ink:#14162B; --muted:#6B6F8F; --line:#E3E4F0; --chip:#ECEDF8;
+  --sakura:#F0306E; --sakura-ink:#FFFFFF; --grad:linear-gradient(135deg,#FF4D86,#FF7A59);
+  --shadow:0 10px 30px rgba(20,22,60,.08); --glass:rgba(255,255,255,.82);
+}
+@media (prefers-color-scheme:dark){
+  :root{ --bg:#0C0E1D; --card:#161936; --ink:#F3F3FC; --muted:#9EA3CB; --line:#2A2F5A; --chip:#20244A;
+    --sakura:#FF6B97; --shadow:0 10px 30px rgba(0,0,0,.35); --glass:rgba(22,25,54,.82); }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font:16px/1.45 Inter,"Avenir Next","Segoe UI",system-ui,sans-serif;
+  padding:calc(env(safe-area-inset-top,0px) + 14px) 16px calc(env(safe-area-inset-bottom,0px) + 118px);
+}
+main{max-width:480px;margin:0 auto}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:40px;height:40px;border-radius:13px;background:var(--grad);color:#fff;display:grid;place-items:center;font-weight:800;font-size:1.3rem}
+h1{font-size:1.35rem;line-height:1.1;margin:0;letter-spacing:-.02em;font-weight:800}
+.sub{color:var(--muted);margin:2px 0 0;font-size:.9rem}
+label,.q{display:block;font-size:.78rem;letter-spacing:.07em;text-transform:uppercase;font-weight:700;color:var(--muted);margin:22px 0 8px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+input,textarea,select{
+  width:100%;padding:14px 16px;font:inherit;color:var(--ink);background:var(--card);
+  border:1.5px solid var(--line);border-radius:16px;
+}
+textarea{resize:none}
+input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid var(--sakura);outline-offset:2px}

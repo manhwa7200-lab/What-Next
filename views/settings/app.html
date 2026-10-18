@@ -1,0 +1,24 @@
+<section id="setApp" hidden>
+  <button class="back" data-go="settings">← Settings</button>
+  <h2 class="ph">App Settings</h2>
+  <div class="q">Appearance</div>
+  <div class="card" style="margin-top:0">
+    <div class="row" id="themeMode">
+      <button class="chip" data-v="system" aria-pressed="true">System</button>
+      <button class="chip" data-v="light" aria-pressed="false">Light</button>
+      <button class="chip" data-v="dark" aria-pressed="false">Dark</button>
+      <button class="chip" data-v="amoled" aria-pressed="false">AMOLED</button>
+    </div>
+    <div class="colors">
+      <label class="chk">Primary <input type="color" id="colorA" value="#ff4d86"></label>
+      <label class="chk">Secondary <input type="color" id="colorB" value="#ff7a59"></label>
+    </div>
+    <button class="go alt" id="colorReset">Reset colours</button>
+  </div>
+  <div class="q">Privacy</div>
+  <div class="card" style="margin-top:0">
+    <button class="chip" id="blurBtn" aria-pressed="false" style="flex:none">Blur covers</button>
+    <p class="sub" id="hideCount" style="margin-top:14px"></p>
+    <button class="go alt" id="hideClear" style="margin-top:6px">Show hidden titles again</button>
+  </div>
+</section>

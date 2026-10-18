@@ -1,0 +1,18 @@
+<section id="chat" hidden>
+    <button class="back" data-go="profile">← Profile</button>
+    <div id="chatHome">
+      <div class="q">Message a friend</div>
+      <input id="chatUser" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Friend's AniList username">
+      <button class="go" id="chatOpen">Open chat</button>
+      <p class="sub" id="chatErr"></p>
+      <div class="q">Recent</div>
+      <div class="row" id="chatRecent"></div>
+      <p class="sub" style="margin-top:16px">One-to-one private messages through AniList. The chat refreshes every 20 seconds while this tab is open.</p>
+    </div>
+    <div id="chatRoom" hidden>
+      <div class="who"><button id="chatBack">← Back</button><b id="chatWith"></b></div>
+      <div id="thread" aria-live="polite"></div>
+      <div class="chatbox"><textarea id="chatText" rows="2" placeholder="Write a message"></textarea><button class="go" id="chatSend" style="width:auto;margin:0;padding:0 20px">Send</button></div>
+      <p class="sub" id="chatNote"></p>
+    </div>
+  </section>
