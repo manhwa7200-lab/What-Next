@@ -204,6 +204,63 @@ input[type=color]{width:46px;height:34px;padding:0;border:0;background:none}
 .lbtn:active{transform:scale(.97)}
 .lbottom .lfoot{text-align:center;font-size:.78rem;opacity:.7;margin:18px 0 0}
 @media (prefers-reduced-motion:reduce){.cloud,.petal{animation:none}}
+button.hlink{background:none;border:0;padding:0;text-align:left;cursor:pointer;font:inherit;font-weight:700;font-size:.85rem;color:#fff;opacity:.9}
+input[type=range]{padding:0;border:0;background:none;accent-color:var(--sakura)}
+.trend{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 2px 10px;scrollbar-width:none}
+.tcard{flex:0 0 86%;scroll-snap-align:start;border:0;padding:0;text-align:left;background:var(--card);border-radius:26px;overflow:hidden;box-shadow:var(--shadow);cursor:pointer;color:var(--ink);font:inherit}
+.ttop{position:relative;display:flex;gap:14px;padding:18px;min-height:210px;color:#fff;align-items:flex-end;overflow:hidden}
+.tbg,.mbg{position:absolute;inset:-24px;background-size:cover;background-position:center;filter:blur(18px) brightness(.5) saturate(1.2)}
+.tposter{position:relative;width:104px;aspect-ratio:2/3;object-fit:cover;border-radius:14px;box-shadow:0 10px 24px rgba(0,0,0,.5);flex:none;background:#222}
+.tinfo{position:relative;display:flex;flex-direction:column;gap:4px;min-width:0}
+.tt2{font-size:1.1rem;line-height:1.15;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.tsub{font-size:.85rem;opacity:.85}
+.tstats{display:flex;gap:14px;font-weight:700;font-size:.9rem}
+.tbody{padding:14px 16px 16px}
+.gtags{display:flex;gap:6px;flex-wrap:wrap}
+.gtag{padding:5px 11px;border-radius:8px;font-size:.78rem;font-weight:700;color:#fff}
+.tdesc{margin:10px 0 0;font-size:.88rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+#media{z-index:25;padding-top:0}
+#editor{z-index:35}
+.mhead{position:relative;overflow:hidden;color:#fff;margin:0 -16px;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 20px}
+.mbar{position:relative;display:flex;justify-content:space-between;margin-bottom:14px}
+.mbtn{width:42px;height:42px;border-radius:50%;border:0;background:rgba(0,0,0,.45);color:#fff;font-size:1.1rem;cursor:pointer}
+.mrow{position:relative;display:flex;gap:16px;align-items:flex-end}
+.mrow h1{font-size:1.45rem;line-height:1.1;margin:0 0 6px;letter-spacing:-.02em}
+.mrow p{margin:2px 0;font-size:.9rem;opacity:.9}
+.mstats{display:flex;align-items:center;margin:16px 0 0;background:var(--card);border-radius:22px;box-shadow:var(--shadow);padding:14px}
+.mcell{flex:1;text-align:center;padding:0 6px;border-right:1px solid var(--line)}
+.mcell b{display:block;font-size:1.2rem}
+.mcell span{font-size:.8rem;color:var(--muted)}
+.mstatus{flex:1.5;margin-left:12px;padding:14px 8px;border-radius:16px;border:2px solid var(--sakura);background:none;color:var(--ink);font:inherit;font-weight:800;cursor:pointer}
+.msec{margin-top:26px}
+.msec h3{margin:0 0 10px;font-size:1.1rem;display:flex;justify-content:space-between;align-items:center}
+.msec h3 button{background:none;border:0;color:var(--sakura);font:inherit;font-weight:700;font-size:.9rem;cursor:pointer}
+.clamp{max-height:7.2em;overflow:hidden;position:relative;color:var(--muted);line-height:1.5;white-space:pre-line}
+.clamp.open{max-height:none}
+.hscroll{display:flex;gap:14px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
+.person{flex:0 0 76px;text-align:center;font-size:.78rem;color:var(--ink);text-decoration:none}
+.person img{width:72px;height:72px;border-radius:50%;object-fit:cover;background:var(--chip);display:block;margin:0 auto 6px}
+.person i{display:block;font-style:normal;color:var(--muted);font-size:.72rem}
+.irow{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:.92rem}
+.irow span:first-child{flex:0 0 38%;color:var(--muted)}
+.trow{display:flex;justify-content:space-between;padding:7px 0;font-size:.92rem}
+.trow em{font-style:normal;color:var(--muted)}
+.relc{flex:0 0 112px;position:relative;border:0;background:none;text-align:left;padding:0;color:var(--ink);font:inherit;cursor:pointer}
+.relc img{width:112px;aspect-ratio:2/3;object-fit:cover;border-radius:14px;background:var(--chip);display:block}
+.relc b{display:block;font-size:.8rem;margin-top:6px;line-height:1.2}
+.relc i{font-style:normal;font-size:.72rem;color:var(--muted)}
+.relb{position:absolute;top:6px;left:6px;padding:3px 8px;border-radius:8px;background:rgba(0,0,0,.65);color:#fff;font-size:.68rem;font-weight:700}
+.rk{display:inline-block;padding:6px 12px;border-radius:999px;background:var(--chip);font-size:.8rem;font-weight:700;margin:0 6px 6px 0}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg .chip{flex:0 0 auto;min-width:0;padding:10px 14px}
+.stepper{display:flex;align-items:center;gap:10px}
+.stepper input{text-align:center;max-width:110px}
+.stepper .chip{flex:0 0 auto;min-width:54px}
+.ptrack{height:8px;border-radius:6px;background:var(--chip);overflow:hidden;margin-top:12px}
+.ptrack i{display:block;height:100%;background:var(--grad);border-radius:6px}
+.bigscore{font-size:1.6rem;font-weight:800;margin:6px 0}
+.datecell{flex:1}
+.datecell .mini{margin:6px 0 0}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -270,6 +327,10 @@ input[type=color]{width:46px;height:34px;padding:0;border:0;background:none}
   </section>
 
   <div id="result" aria-live="polite"></div>
+  <section id="trend" hidden>
+    <div class="q">Trending anime right now</div><div class="trend" id="trendAnime"></div>
+    <div class="q">Trending manga right now</div><div class="trend" id="trendManga"></div>
+  </section>
   </div>
 
   <section id="discover" hidden>
@@ -425,6 +486,7 @@ input[type=color]{width:46px;height:34px;padding:0;border:0;background:none}
     <div class="card" style="margin-top:0">
       <p class="sub">You're signed in with your AniList account. Logging out clears the login from this device.</p>
       <button class="go alt" id="logout2">Log out</button>
+      <button class="go alt" id="appsLink">Manage app access on AniList</button>
     </div>
 
     <div class="q">About</div>
@@ -468,6 +530,9 @@ input[type=color]{width:46px;height:34px;padding:0;border:0;background:none}
   <label class="chk"><input type="checkbox" id="csHideUnscored"> Hide score when not scored</label>
   <label class="chk" style="margin-top:14px"><input type="checkbox" id="csHideProgress"> Hide progress</label>
 </div>
+
+<div class="sheet" id="media" hidden></div>
+<div class="sheet" id="editor" hidden></div>
 
 <div class="qvback" id="qv" hidden><div class="qvbox" id="qvBox"></div></div>
 
@@ -609,7 +674,7 @@ function show({e,p}){
   const img = new Image(); img.alt = ""; img.className = "poster"; img.src = m.coverImage.extraLarge || m.coverImage.large;
   const info = el("div", "hinfo");
   const meta = [(m.format || "").replace(/_/g, " "), m.averageScore ? "★ " + m.averageScore + "%" : "", (m.genres || []).slice(0, 2).join(", ")].filter(Boolean).join(" · ");
-  const a = el("a", "hlink", "Open on AniList"); a.href = m.siteUrl; a.target = "_blank"; a.rel = "noopener";
+  const a = el("button", "hlink", "Details ›"); a.onclick = () => openMedia(m.id);
   info.append(el("span", "tag", (p.isAnime ? "Anime" : "Manga") + (e.status === "PLANNING" ? " · Planning" : "")), el("h2", null, title), el("p", "hmeta", meta), a);
   inn.append(img, info);
   const act = el("div", "act");
@@ -647,6 +712,7 @@ function showTab(t){
   new Set(Object.values(SCREENS)).forEach(id => { $(id).hidden = id !== shown; });
   document.querySelectorAll("#tabs .tab").forEach(c => c.setAttribute("aria-pressed", String(c.dataset.v === (TAB_OF[t] || t))));
   if(t === "discover" && !$("#dlist").children.length) discover(false);
+  if(t === "pick") loadTrending();
   if(t === "schedule") renderSchedule();
   if(t === "stats") renderStats();
   if(t === "chat") renderRecent();
@@ -694,7 +760,7 @@ function wireD(id, key){
 wireD("#dtype", "type"); wireD("#dadult", "adult");
 
 function itemCard(m, onList){
-  const card = document.createElement("div"); card.className = "item";
+  const card = document.createElement("div"); card.className = "item"; card.onclick = ev => { if(!ev.target.closest("button,a")) openMedia(m.id); };
   const img = new Image(); img.alt = ""; img.loading = "lazy"; img.src = m.coverImage.large;
   const info = document.createElement("div");
   const h = document.createElement("h3"); h.textContent = m.title.english || m.title.romaji;
@@ -850,10 +916,21 @@ if(isNative){
   const A = nativePlugin("App");
   if(A && A.addListener){
     A.addListener("appUrlOpen", ev => handleAuthUrl(ev.url));
+    A.addListener("backButton", () => {
+      if(!$("#editor").hidden) $("#editor").hidden = true;
+      else if(!$("#qv").hidden) $("#qv").hidden = true;
+      else if(!$("#fsheet").hidden) $("#fsheet").hidden = true;
+      else if(!$("#csheet").hidden) $("#csheet").hidden = true;
+      else if(!$("#media").hidden) closeMedia();
+      else if(!$("#settings").hidden || !$("#stats").hidden || !$("#chat").hidden) showTab("profile");
+      else if($("#pickWrap").hidden) showTab("pick");
+      else if(A.exitApp) A.exitApp();
+    });
     if(A.getLaunchUrl) A.getLaunchUrl().then(r => r && handleAuthUrl(r.url)).catch(() => {});
   }
 }
 $("#logout2").onclick = () => $("#logout").click();
+$("#appsLink").onclick = () => openExternal("https://anilist.co/settings/apps");
 $("#logout").onclick = () => {
   clearAuth();
   state.items = []; state.user = ""; state.uid = 0; state.skipped.clear(); lists.anime.entries = lists.manga.entries = null; profLoaded = false;
@@ -992,6 +1069,7 @@ function renderSchedule(){
     info.append(h, el("p", null, "Episode " + n.episode + " · " + at.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })));
     const waiting = n.episode - 1 - e.progress;
     if(e.status !== "PLANNING" && waiting > 0) info.append(el("p", null, waiting + " waiting for you"));
+    card.onclick = ev => { if(!ev.target.closest("a")) openMedia(x.id); };
     card.append(img, info, el("div", "cd", fmtIn(n.airingAt - Date.now() / 1000)));
     box.append(card);
   }
@@ -1378,7 +1456,7 @@ function lcard(e, type){
   info.append(el("div", "lt", tt(m)));
   if(!(ly.hideUnscored && !e.score)) meta.append(el("span", "sc", "★ " + e.score));
   if(!ly.hideProgress) meta.append(el("span", null, e.progress + " / " + (total || "?")));
-  info.append(meta); card.append(img, info); card.onclick = () => quickView(e, type);
+  info.append(meta); card.append(img, info); card.onclick = () => openMedia(m.id);
   return card;
 }
 function quickView(e, type){
@@ -1495,6 +1573,306 @@ $("#colorB").oninput = ev => { LSset("wn_theme", Object.assign(themeCfg(), { b: 
 $("#colorReset").onclick = () => { LSset("wn_theme", Object.assign(themeCfg(), { a: "", b: "" })); applyTheme(); fillLook(); };
 applyTheme();
 
+// ---------- Media pages, list editor, trending ----------
+const MEDIA_Q = "query($id:Int){Media(id:$id){id idMal type siteUrl isAdult title{romaji english native} synonyms bannerImage coverImage{extraLarge color} description(asHtml:false) format status episodes chapters volumes duration season seasonYear startDate{year month day} endDate{year month day} source countryOfOrigin averageScore popularity favourites isFavourite genres rankings{rank type context allTime} tags{name rank isMediaSpoiler isGeneralSpoiler description} studios(isMain:true){nodes{name}} nextAiringEpisode{airingAt episode} trailer{id site} externalLinks{site url type} characters(sort:[ROLE,RELEVANCE],perPage:14){edges{role node{id siteUrl name{full} image{medium}}}} staff(sort:[RELEVANCE],perPage:14){edges{role node{id siteUrl name{full} image{medium}}}} relations{edges{relationType node{id type format title{romaji english} coverImage{large}}}} recommendations(sort:RATING_DESC,perPage:12){nodes{rating mediaRecommendation{id type format title{romaji english} coverImage{large} averageScore seasonYear episodes chapters}}} mediaListEntry{id status progress score(format:POINT_100) repeat notes private priority startedAt{year month day} completedAt{year month day} customLists}}}";
+const TREND_Q = "query($t:MediaType){Page(perPage:12){media(type:$t,sort:TRENDING_DESC,isAdult:false){id type title{romaji english} bannerImage coverImage{extraLarge} averageScore favourites genres description(asHtml:false) studios(isMain:true){nodes{name}} staff(sort:[RELEVANCE],perPage:3){edges{node{name{full}}}}}}}";
+const SAVE_FULL = "mutation($mediaId:Int,$status:MediaListStatus,$scoreRaw:Int,$progress:Int,$repeat:Int,$notes:String,$priority:Int,$private:Boolean,$startedAt:FuzzyDateInput,$completedAt:FuzzyDateInput,$customLists:[String]){SaveMediaListEntry(mediaId:$mediaId,status:$status,scoreRaw:$scoreRaw,progress:$progress,repeat:$repeat,notes:$notes,priority:$priority,private:$private,startedAt:$startedAt,completedAt:$completedAt,customLists:$customLists){id status progress}}";
+const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const mcache = new Map(), mstack = [];
+const fd = d => (!d || !d.year) ? "?" : (d.day ? d.day + " " : "") + (d.month ? MON[d.month - 1] + " " : "") + d.year;
+const dIn = d => d && d.year && d.month && d.day ? d.year + "-" + String(d.month).padStart(2, "0") + "-" + String(d.day).padStart(2, "0") : "";
+const dOut = v => { if(!v) return { year: null, month: null, day: null }; const [y, m, d] = v.split("-").map(Number); return { year: y, month: m, day: d }; };
+const clean = t => String(t || "").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&quot;/g, '"').replace(/&#0?39;|&rsquo;/g, "'").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim();
+const norm = x => String(x || "").replace(/_/g, " ");
+function gtag(g){
+  let h = 0; for(const c of g) h = (h * 31 + c.charCodeAt(0)) % 360;
+  const s = el("span", "gtag", g); s.style.background = "hsl(" + h + " 45% 34%)"; return s;
+}
+function hrow(items){ const r = el("div", "hscroll"); r.append(...items); return r; }
+function msec(title, body, action){
+  const s = el("div", "msec"), h = el("h3", null, title);
+  if(action) h.append(action);
+  s.append(h, body); return s;
+}
+
+function openMedia(id){ if(mstack[mstack.length - 1] !== id) mstack.push(id); showMedia(id); }
+function closeMedia(){ mstack.pop(); if(mstack.length) showMedia(mstack[mstack.length - 1]); else $("#media").hidden = true; }
+function closeBar(){
+  const bar = el("div", "mbar"), x = el("button", "mbtn", "✕"); x.setAttribute("aria-label", "Close"); x.onclick = closeMedia;
+  bar.append(x); return bar;
+}
+async function showMedia(id){
+  const box = $("#media"); box.hidden = false;
+  if(!mcache.has(id)){
+    const w = el("div", "mhead"); w.append(closeBar()); box.replaceChildren(w, el("div", "msg", "Loading…"));
+    try{
+      const { json } = await gql(MEDIA_Q, { id });
+      const m = json.data && json.data.Media;
+      if(!m) throw new Error((json.errors && json.errors[0].message) || "Not found");
+      mcache.set(id, m);
+    }catch(err){
+      const w2 = el("div", "mhead"); w2.append(closeBar());
+      box.replaceChildren(w2, el("div", "msg", err.message.includes("Failed to fetch") ? "No connection. Try again." : err.message)); return;
+    }
+  }
+  if(mstack[mstack.length - 1] === id) renderMedia(mcache.get(id));
+}
+
+function renderMedia(m){
+  const box = $("#media"), type = m.type === "ANIME" ? "anime" : "manga", lab = STATUS_LABEL(type), e = m.mediaListEntry;
+  const total = type === "anime" ? m.episodes : m.chapters;
+  box.replaceChildren(); box.scrollTop = 0;
+  // header
+  const head = el("div", "mhead"), bg = el("div", "mbg");
+  bg.style.backgroundImage = "url(" + JSON.stringify(m.bannerImage || m.coverImage.extraLarge) + ")";
+  const row = el("div", "mrow"), poster = new Image(); poster.alt = ""; poster.className = "tposter"; poster.src = m.coverImage.extraLarge;
+  const info = el("div"); info.style.minWidth = "0";
+  info.append(el("h1", null, tt(m)), el("p", null, m.seasonYear || (m.startDate && m.startDate.year) || ""), el("p", null, [norm(m.format), total ? total + (type === "anime" ? " episodes" : " chapters") : ""].filter(Boolean).join(" • ")));
+  if(m.nextAiringEpisode){
+    const n = m.nextAiringEpisode;
+    info.append(el("p", null, "Ep. " + n.episode + " on " + new Date(n.airingAt * 1000).toLocaleString([], { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) + " · in " + fmtIn(n.airingAt - Date.now() / 1000)));
+  }
+  row.append(poster, info); head.append(bg, closeBar(), row); box.append(head);
+  // stats + status
+  const st = el("div", "mstats");
+  const cell = (b, s) => { const c = el("div", "mcell"); c.append(el("b", null, b), el("span", null, s)); return c; };
+  const sbtn = el("button", "mstatus", e ? (lab[e.status] || e.status) : "Add to list");
+  sbtn.onclick = () => { if(auth.token) openEditor(m); };
+  st.append(cell(m.averageScore || "–", "Score"), cell((m.favourites || 0).toLocaleString(), "Favorites"), sbtn);
+  box.append(st);
+  if(e && total && (e.status === "CURRENT" || e.status === "REPEATING") && e.progress < total){
+    const plus = el("button", "go alt", "+1 " + (type === "anime" ? "episode" : "chapter") + "  (now " + e.progress + " / " + total + ")");
+    plus.onclick = async () => {
+      plus.disabled = true;
+      try{
+        const p = e.progress + 1, vars = { mediaId: m.id, progress: p };
+        if(p >= total) vars.status = "COMPLETED";
+        const { json } = await gql("mutation($mediaId:Int,$progress:Int,$status:MediaListStatus){SaveMediaListEntry(mediaId:$mediaId,progress:$progress,status:$status){id}}", vars);
+        if(json.errors) throw new Error(json.errors[0].message);
+        mcache.delete(m.id); lists.anime.entries = lists.manga.entries = null; showMedia(m.id);
+      }catch(err){ plus.disabled = false; plus.textContent = "Couldn't save: " + err.message; }
+    };
+    box.append(plus);
+  }
+  if(m.genres && m.genres.length){ const g = el("div", "gtags"); g.style.marginTop = "16px"; m.genres.forEach(x => g.append(gtag(x))); box.append(g); }
+  // rankings, trailer, where to watch
+  const extras = el("div"); extras.style.marginTop = "14px";
+  (m.rankings || []).filter(r => r.allTime || r.type === "RATED").slice(0, 3).forEach(r => extras.append(el("span", "rk", "#" + r.rank + " " + r.context)));
+  if(m.trailer && m.trailer.id){
+    const url = m.trailer.site === "youtube" ? "https://www.youtube.com/watch?v=" + m.trailer.id : m.trailer.site === "dailymotion" ? "https://www.dailymotion.com/video/" + m.trailer.id : "";
+    if(url){ const t = el("button", "rk", "▶ Trailer"); t.style.border = "0"; t.style.cursor = "pointer"; t.style.color = "var(--ink)"; t.onclick = () => openExternal(url); extras.append(t); }
+  }
+  if(extras.children.length) box.append(extras);
+  // synopsis
+  const desc = clean(m.description);
+  if(desc){
+    const c = el("div", "clamp", desc), t = el("button", null, "More");
+    t.onclick = () => { c.classList.toggle("open"); t.textContent = c.classList.contains("open") ? "Less" : "More"; };
+    box.append(msec("Synopsis", c, t));
+  }
+  // characters and staff
+  const people = (edges, label) => edges.map(x => { const a = el("a", "person"), i = new Image(); i.alt = ""; i.loading = "lazy"; i.src = x.node.image.medium; a.href = x.node.siteUrl; a.target = "_blank"; a.rel = "noopener"; a.append(i, el("span", null, x.node.name.full), el("i", null, norm(x.role))); return a; });
+  if(m.characters && m.characters.edges.length) box.append(msec("Characters", hrow(people(m.characters.edges))));
+  // info
+  const rows = [["Romaji", m.title.romaji], ["English", m.title.english], ["Native", m.title.native], ["Synonyms", (m.synonyms || []).join(", ")],
+    ["Format", norm(m.format)], [type === "anime" ? "Episodes" : "Chapters", total], type === "anime" ? ["Episode duration", m.duration ? m.duration + " minutes" : ""] : ["Volumes", m.volumes],
+    ["Source", norm(m.source)], ["Status", norm(m.status)], ["Start date", fd(m.startDate)], ["End date", fd(m.endDate)],
+    ["Season", m.season ? titleCase(m.season) + " " + (m.seasonYear || "") : ""], ["Studios", ((m.studios && m.studios.nodes) || []).map(s => s.name).join(", ")],
+    ["Country", { JP: "Japan", KR: "South Korea", CN: "China", TW: "Taiwan" }[m.countryOfOrigin] || m.countryOfOrigin], ["Popularity", m.popularity ? m.popularity.toLocaleString() : ""]];
+  const ib = el("div");
+  rows.filter(r => r[1]).forEach(r => { const d = el("div", "irow"); d.append(el("span", null, r[0]), el("span", null, String(r[1]))); ib.append(d); });
+  box.append(msec("Info", ib));
+  // tags
+  const tags = (m.tags || []).slice(), tb = el("div");
+  let spoilers = false;
+  const drawTags = () => {
+    tb.replaceChildren(...tags.filter(t => spoilers || !(t.isMediaSpoiler || t.isGeneralSpoiler)).map(t => { const r = el("div", "trow"); r.title = t.description || ""; r.append(el("span", null, t.name), el("em", null, t.rank + "%")); return r; }));
+  };
+  if(tags.length){
+    const sp = el("button", null, "Show spoilers"); sp.onclick = () => { spoilers = !spoilers; sp.textContent = spoilers ? "Hide spoilers" : "Show spoilers"; drawTags(); };
+    drawTags(); box.append(msec("Tags", tb, sp));
+  }
+  // where to watch or read
+  const links = (m.externalLinks || []).filter(l => l.type === "STREAMING");
+  if(links.length){
+    const w = el("div");
+    links.forEach(l => { const b = el("button", "rk", l.site); b.style.border = "0"; b.style.cursor = "pointer"; b.style.color = "var(--ink)"; b.onclick = () => openExternal(l.url); w.append(b); });
+    box.append(msec(type === "anime" ? "Where to watch" : "Where to read", w));
+  }
+  if(m.staff && m.staff.edges.length) box.append(msec("Staff", hrow(people(m.staff.edges))));
+  // relations
+  const rel = (m.relations && m.relations.edges || []).map(r => {
+    const b = el("button", "relc"), i = new Image(); i.alt = ""; i.loading = "lazy"; i.src = r.node.coverImage.large;
+    b.append(i, el("span", "relb", norm(r.relationType)), el("b", null, tt(r.node)), el("i", null, norm(r.node.format)));
+    b.onclick = () => openMedia(r.node.id); return b;
+  });
+  if(rel.length) box.append(msec("Relations", hrow(rel)));
+  // recommendations
+  const rec = ((m.recommendations && m.recommendations.nodes) || []).filter(n => n.mediaRecommendation).map(n => {
+    const r = n.mediaRecommendation, b = el("button", "relc"), i = new Image(); i.alt = ""; i.loading = "lazy"; i.src = r.coverImage.large;
+    b.append(i, el("b", null, tt(r)), el("i", null, [r.seasonYear, r.averageScore ? "★ " + r.averageScore : "", n.rating ? "👍 " + n.rating : ""].filter(Boolean).join(" · ")));
+    b.onclick = () => openMedia(r.id); return b;
+  });
+  if(rec.length) box.append(msec("Recommendations", hrow(rec)));
+  const open = el("button", "go alt", "Open on AniList"); open.onclick = () => openExternal(m.siteUrl); box.append(open);
+}
+
+// ----- List editor -----
+let LOPT = null;
+async function listOptions(){
+  if(LOPT) return LOPT;
+  try{
+    const { json } = await gql("query{Viewer{mediaListOptions{animeList{customLists} mangaList{customLists}}}}", {});
+    const o = json.data.Viewer.mediaListOptions; LOPT = { anime: o.animeList.customLists || [], manga: o.mangaList.customLists || [] };
+  }catch(_){ LOPT = { anime: [], manga: [] }; }
+  return LOPT;
+}
+async function openEditor(m){
+  const type = m.type === "ANIME" ? "anime" : "manga", total = type === "anime" ? m.episodes : m.chapters, lab = STATUS_LABEL(type);
+  const opts = (await listOptions())[type], e = m.mediaListEntry;
+  const d = { status: e ? e.status : "PLANNING", progress: e ? e.progress : 0, score: e ? (e.score || 0) / 10 : 0, repeat: e ? e.repeat || 0 : 0, notes: (e && e.notes) || "", priority: e ? e.priority || 0 : 0,
+    priv: !!(e && e.private), start: dIn(e && e.startedAt), end: dIn(e && e.completedAt), lists: Object.keys((e && e.customLists) || {}).filter(k => e.customLists[k]) };
+  let fav = !!m.isFavourite, armed = false;
+  const box = $("#editor"); box.replaceChildren(); box.hidden = false; box.scrollTop = 0;
+  const head = el("div", "sheethead"), back = el("button", "mini", "← Back"), heart = el("button", "mini", fav ? "♥ Favourite" : "♡ Favourite");
+  back.onclick = () => { box.hidden = true; };
+  heart.onclick = async () => {
+    heart.disabled = true;
+    try{
+      const v = type === "anime" ? { a: m.id } : { m: m.id };
+      const { json } = await gql("mutation($a:Int,$m:Int){ToggleFavourite(animeId:$a,mangaId:$m){anime{pageInfo{total}}}}", v);
+      if(json.errors) throw new Error(json.errors[0].message);
+      fav = !fav; heart.textContent = fav ? "♥ Favourite" : "♡ Favourite"; mcache.delete(m.id);
+    }catch(_){}
+    heart.disabled = false;
+  };
+  head.append(back, el("b", null, "List editor"), heart);
+  const title = el("h2", "ph", tt(m)); title.style.margin = "16px 0 0";
+  box.append(head, title);
+  const sec = t => { const q = el("div", "q", t); box.append(q); };
+  // status
+  sec("Status");
+  const seg = el("div", "seg"), segBtns = {};
+  ["CURRENT", "PLANNING", "COMPLETED", "REPEATING", "PAUSED", "DROPPED"].forEach(s => { const b = el("button", "chip", lab[s]); b.onclick = () => setStatus(s); segBtns[s] = b; seg.append(b); });
+  box.append(seg);
+  // progress
+  sec(type === "anime" ? "Episodes" : "Chapters");
+  const stp = el("div", "stepper"), minus = el("button", "chip", "−"), plus = el("button", "chip", "+"), pin = el("input"), of = el("span", "sub", total ? "of " + total : "");
+  pin.type = "number"; pin.min = "0"; pin.inputMode = "numeric";
+  const ptrack = el("div", "ptrack"), pfill = el("i"); ptrack.append(pfill);
+  stp.append(minus, pin, plus, of); box.append(stp, ptrack);
+  // score
+  sec("Score");
+  const sv = el("div", "bigscore"), sl = el("input"); sl.type = "range"; sl.min = "0"; sl.max = "10"; sl.step = "0.5";
+  box.append(sv, sl);
+  // dates
+  sec("Dates");
+  const dates = el("div", "two"), mkDate = (label, key) => {
+    const c = el("div", "datecell"), i = el("input"), l = el("span", "sub", label), t = el("button", "mini", "Today"), x = el("button", "mini", "Clear");
+    i.type = "date"; i.oninput = () => { d[key] = i.value; }; t.onclick = () => { d[key] = dayKey(); sync(); }; x.onclick = () => { d[key] = ""; sync(); };
+    c.append(l, i, t, x); dates.append(c); return i;
+  };
+  const startIn = mkDate("Started", "start"), endIn = mkDate("Finished", "end");
+  box.append(dates);
+  // rewatches, priority, private
+  sec(type === "anime" ? "Total rewatches" : "Total rereads");
+  const rs = el("div", "stepper"), rm = el("button", "chip", "−"), rp = el("button", "chip", "+"), rv = el("b", null, "0");
+  rm.onclick = () => { d.repeat = Math.max(0, d.repeat - 1); sync(); }; rp.onclick = () => { d.repeat++; sync(); };
+  rs.append(rm, rv, rp); box.append(rs);
+  sec("Priority");
+  const pr = el("div", "seg"), prBtns = [];
+  [["None", 0], ["Low", 1], ["Medium", 3], ["High", 5]].forEach(([n, v]) => { const b = el("button", "chip", n); b.onclick = () => { d.priority = v; sync(); }; prBtns.push([b, v]); pr.append(b); });
+  box.append(pr);
+  const pv = el("label", "chk"), pvi = el("input"); pvi.type = "checkbox"; pvi.onchange = () => { d.priv = pvi.checked; };
+  pv.style.marginTop = "18px"; pv.append(pvi, " Private (hide from my public profile)"); box.append(pv);
+  // custom lists
+  if(opts.length){
+    sec("Custom lists");
+    const cl = el("div", "seg");
+    opts.forEach(n => { const b = el("button", "chip", n); b.dataset.n = n; b.onclick = () => { const i = d.lists.indexOf(n); if(i >= 0) d.lists.splice(i, 1); else d.lists.push(n); sync(); }; cl.append(b); });
+    box.append(cl);
+  }
+  // notes
+  sec("Notes");
+  const notes = el("textarea"); notes.rows = 3; notes.placeholder = "Write a note"; notes.oninput = () => { d.notes = notes.value; };
+  box.append(notes);
+  // bar
+  const bar = el("div", "sheetbar"), save = el("button", "go", e ? "Save" : "Add to list");
+  if(e){ var rmv = el("button", "go alt", "Remove"); bar.append(rmv); }
+  bar.append(save); box.append(bar);
+
+  function sync(){
+    for(const s in segBtns) segBtns[s].setAttribute("aria-pressed", String(d.status === s));
+    pin.value = d.progress; pfill.style.width = total ? Math.min(100, Math.round(d.progress / total * 100)) + "%" : "0%";
+    sv.textContent = d.score ? "★ " + d.score : "No score"; sl.value = d.score;
+    startIn.value = d.start; endIn.value = d.end; rv.textContent = d.repeat;
+    prBtns.forEach(([b, v]) => b.setAttribute("aria-pressed", String(d.priority === v)));
+    pvi.checked = d.priv; notes.value = d.notes;
+    box.querySelectorAll("[data-n]").forEach(b => b.setAttribute("aria-pressed", String(d.lists.includes(b.dataset.n))));
+  }
+  function setStatus(s){
+    d.status = s;
+    if(s === "COMPLETED"){ if(total) d.progress = total; if(!d.end) d.end = dayKey(); }
+    if((s === "CURRENT" || s === "REPEATING") && !d.start) d.start = dayKey();
+    sync();
+  }
+  function setProg(n){
+    d.progress = Math.max(0, Math.min(total || 99999, Math.round(n) || 0));
+    if(d.progress > 0 && d.status === "PLANNING"){ d.status = "CURRENT"; if(!d.start) d.start = dayKey(); }
+    if(total && d.progress >= total && d.status !== "COMPLETED" && d.status !== "REPEATING"){ d.status = "COMPLETED"; if(!d.end) d.end = dayKey(); }
+    sync();
+  }
+  minus.onclick = () => setProg(d.progress - 1); plus.onclick = () => setProg(d.progress + 1);
+  pin.onchange = () => setProg(+pin.value);
+  sl.oninput = () => { d.score = +sl.value; sv.textContent = d.score ? "★ " + d.score : "No score"; };
+  sync();
+  const done = () => { box.hidden = true; mcache.delete(m.id); lists.anime.entries = lists.manga.entries = null; if(mstack.length) showMedia(mstack[mstack.length - 1]); };
+  save.onclick = async () => {
+    save.disabled = true; save.textContent = "Saving…";
+    try{
+      const vars = { mediaId: m.id, status: d.status, scoreRaw: Math.round(d.score * 10), progress: d.progress, repeat: d.repeat, notes: d.notes, priority: d.priority, private: d.priv, startedAt: dOut(d.start), completedAt: dOut(d.end), customLists: d.lists };
+      const { json } = await gql(SAVE_FULL, vars);
+      if(json.errors) throw new Error(json.errors[0].message);
+      done();
+    }catch(err){ save.disabled = false; save.textContent = "Couldn't save: " + err.message; }
+  };
+  if(rmv) rmv.onclick = async () => {
+    if(!armed){ armed = true; rmv.textContent = "Tap again to remove"; return; }
+    rmv.disabled = true;
+    try{
+      const { json } = await gql("mutation($id:Int){DeleteMediaListEntry(id:$id){deleted}}", { id: e.id });
+      if(json.errors) throw new Error(json.errors[0].message);
+      done();
+    }catch(err){ rmv.disabled = false; rmv.textContent = "Couldn't remove: " + err.message; }
+  };
+}
+
+// ----- Trending on the Pick screen -----
+let trendAt = 0;
+function trendCard(m){
+  const c = el("button", "tcard"), top = el("div", "ttop"), bg = el("div", "tbg");
+  bg.style.backgroundImage = "url(" + JSON.stringify(m.bannerImage || m.coverImage.extraLarge) + ")";
+  const img = new Image(); img.alt = ""; img.loading = "lazy"; img.className = "tposter"; img.src = m.coverImage.extraLarge;
+  const sub = m.type === "ANIME" ? ((m.studios.nodes[0] && m.studios.nodes[0].name) || "") : (m.staff.edges || []).map(x => x.node.name.full).join(", ");
+  const stats = el("div", "tstats"); stats.append(el("span", null, "★ " + (m.averageScore || "–")), el("span", null, "♥ " + (m.favourites || 0).toLocaleString()));
+  const info = el("div", "tinfo"); info.append(el("b", "tt2", tt(m)), el("span", "tsub", sub), stats);
+  top.append(bg, img, info);
+  const body = el("div", "tbody"), g = el("div", "gtags"); (m.genres || []).slice(0, 3).forEach(x => g.append(gtag(x)));
+  body.append(g, el("p", "tdesc", clean(m.description)));
+  c.append(top, body); c.onclick = () => openMedia(m.id); return c;
+}
+async function loadTrending(){
+  if(!auth.token || Date.now() - trendAt < 600000) return;
+  $("#trend").hidden = false;
+  for(const [t, id] of [["ANIME", "#trendAnime"], ["MANGA", "#trendManga"]]){
+    try{
+      const { json } = await gql(TREND_Q, { t });
+      $(id).replaceChildren(...((json.data && json.data.Page.media) || []).map(trendCard));
+    }catch(_){ $(id).replaceChildren(el("div", "msg", "Couldn't load trending. Check your connection.")); return; }
+  }
+  trendAt = Date.now();
+}
+
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 
 (async function start(){
@@ -1508,6 +1886,7 @@ if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch
     state.user = name; state.uid = json.data.Viewer.id;
     try{ localStorage.setItem("wn_name", name); }catch(_){}
     loadList(name);
+    loadTrending();
     setTimeout(maybeAutoSync, 3000);
   }catch(err){
     const cn = localStorage.getItem("wn_name");

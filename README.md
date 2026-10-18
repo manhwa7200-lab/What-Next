@@ -15,6 +15,9 @@ It's a single `index.html` file with no build step and no dependencies. Host it 
 - **Mark as done:** save your progress to AniList straight from a pick. It marks a title Completed when you finish it, and moves a Planning title to Current.
 - **Blur covers:** hides cover art when you're in public.
 - **Anime and Manga lists:** your full AniList lists with status tabs, search, a filter sheet (sort, format, status, country, year, length, score, genres include/exclude) and list customisation (grid or list, columns, hide score or progress). Tap a card for quick view with +1 / -1 progress.
+- **Trending:** trending anime and manga carousels on the Pick screen.
+- **Media pages:** tap any title for a full page with score, favourites, genres, synopsis, characters, info, tags with spoiler toggle, where to watch, staff, relations, and recommendations. Relations and recommendations open their own pages.
+- **List editor:** status, progress stepper, score slider, start and finish dates, rewatches, priority, custom lists, notes, private, favourite, and remove. Reaching the last episode completes the entry and sets dates automatically.
 - **Profile:** your avatar and totals, with Stats, Chat, and Settings inside.
 - **Settings:** Discord and secrets, appearance (System, Light, Dark, AMOLED, custom colours), list options, privacy, and account.
 - **Discord sync:** anime and manga updates from your AniList list are posted to Discord forum threads, run from inside the app.
