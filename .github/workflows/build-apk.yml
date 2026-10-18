@@ -22,7 +22,7 @@ jobs:
           grep -q '"@capacitor/app"' package.json || { echo "package.json is missing @capacitor/app. Upload the new package.json."; exit 1; }
           grep -q '"@capacitor/browser"' package.json || { echo "package.json is missing @capacitor/browser. Upload the new package.json."; exit 1; }
       - run: npm install
-      - run: mkdir -p www && cp index.html sw.js manifest.webmanifest icon.svg www/ && (cp config.js www/ || true)
+      - run: mkdir -p www && cp *.html *.css *.js manifest.webmanifest icon.svg www/
       - run: npx cap add android
       - name: Add login deep link and version
         run: |
