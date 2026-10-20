@@ -2,9 +2,9 @@
 .login{position:fixed;inset:0;z-index:40;overflow:hidden;color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:calc(env(safe-area-inset-top,0px) + 56px) 26px calc(env(safe-area-inset-bottom,0px) + 34px);background:#0b1430}
 .sky{position:absolute;inset:0;background:radial-gradient(120% 60% at 50% 100%,rgba(236,140,164,.85) 0%,rgba(236,140,164,0) 60%),linear-gradient(180deg,#0a1838 0%,#14306a 36%,#2a5a95 60%,#5f88ae 80%,#b9a0b6 100%)}
 .cloud{position:absolute;border-radius:50%;background:radial-gradient(closest-side,rgba(255,255,255,.6),rgba(255,255,255,0));filter:blur(14px);animation:drift 40s ease-in-out infinite}
-.c1{width:340px;height:200px;top:20%;left:-10%}
-.c2{width:430px;height:240px;top:42%;right:-20%;animation-duration:55s;animation-direction:reverse}
-.c3{width:300px;height:180px;top:60%;left:8%;animation-duration:70s}
+.cloud-1{width:340px;height:200px;top:20%;left:-10%}
+.cloud-2{width:430px;height:240px;top:42%;right:-20%;animation-duration:55s;animation-direction:reverse}
+.cloud-3{width:300px;height:180px;top:60%;left:8%;animation-duration:70s}
 @keyframes drift{0%,100%{transform:translateX(0)}50%{transform:translateX(46px)}}
 .petal{position:absolute;top:-24px;width:10px;height:14px;border-radius:70% 0 70% 0;background:rgba(255,198,216,.92);animation:fall linear infinite}
 @keyframes fall{to{transform:translate3d(70px,112vh,0) rotate(540deg)}}

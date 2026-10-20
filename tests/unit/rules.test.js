@@ -1,0 +1,34 @@
+// Unit tests for the tracking rules and score formats in js/core/tracker.js. Run: node tests/unit/rules.test.js
+const fs = require("fs"), vm = require("vm");
+const ctx = { localStorage: { getItem: () => null, setItem() {} }, document: undefined, console };
+vm.createContext(ctx);
+vm.runInContext(fs.readFileSync(require("path").join(__dirname, "../../js/core/tracker.js"), "utf8"), ctx);
+// helper to eval pure functions
+const rules = vm.runInContext("trackRules", ctx), spec = vm.runInContext("SCORE_SPECS", ctx);
+let pass = 0, fail = 0;
+const eq = (name, got, want) => { const ok = JSON.stringify(got) === JSON.stringify(want); ok ? pass++ : fail++; console.log((ok ? "PASS " : "FAIL ") + name + (ok ? "" : "\n   got  " + JSON.stringify(got) + "\n   want " + JSON.stringify(want))); };
+const blank = { year: null, month: null, day: null }, d = new Date(), today = { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() };
+const cur = (o) => Object.assign({ status: "CURRENT", progress: 3, repeat: 0, startedAt: today, completedAt: blank }, o);
+eq("+1 on watching just adds progress", rules(cur({}), 12, { progress: 4 }), { progress: 4 });
+eq("+1 on planning starts it and sets the start date", rules(cur({ status: "PLANNING", progress: 0, startedAt: blank }), 12, { progress: 1 }), { status: "CURRENT", progress: 1, startedAt: today });
+eq("+1 on paused resumes it", rules(cur({ status: "PAUSED" }), 12, { progress: 4 }), { status: "CURRENT", progress: 4 });
+eq("+1 on dropped resumes it", rules(cur({ status: "DROPPED" }), 12, { progress: 4 }), { status: "CURRENT", progress: 4 });
+eq("last episode completes and sets the finish date", rules(cur({ progress: 11 }), 12, { progress: 12 }), { status: "COMPLETED", progress: 12, completedAt: today });
+eq("last chapter of an unknown total never completes", rules(cur({ progress: 11 }), null, { progress: 12 }), { progress: 12 });
+eq("finishing a rewatch completes and adds one rewatch", rules(cur({ status: "REPEATING", progress: 11, repeat: 1, completedAt: today }), 12, { progress: 12 }), { status: "COMPLETED", progress: 12, repeat: 2 });
+eq("lowering a completed title reopens it", rules(cur({ status: "COMPLETED", progress: 12, completedAt: today }), 12, { progress: 11 }), { status: "CURRENT", progress: 11, completedAt: blank });
+eq("progress is capped at the total", rules(cur({ progress: 11 }), 12, { progress: 50 }), { status: "COMPLETED", progress: 12, completedAt: today });
+eq("progress never goes below zero", rules(cur({ progress: 1 }), 12, { progress: -4 }), { progress: 0 });
+eq("status completed fills progress, both dates", rules(cur({ status: "PLANNING", progress: 0, startedAt: blank }), 12, { status: "COMPLETED" }), { status: "COMPLETED", progress: 12, startedAt: today, completedAt: today });
+eq("status completed keeps existing dates", rules(cur({ startedAt: { year: 2025, month: 1, day: 2 }, completedAt: { year: 2025, month: 2, day: 3 } }), 12, { status: "COMPLETED" }), { status: "COMPLETED", progress: 12 });
+eq("completing from rewatching adds a rewatch", rules(cur({ status: "REPEATING", progress: 5, repeat: 0 }), 12, { status: "COMPLETED" }), { status: "COMPLETED", progress: 12, repeat: 1, completedAt: today });
+eq("starting a rewatch resets progress", rules(cur({ status: "COMPLETED", progress: 12, completedAt: today }), 12, { status: "REPEATING" }), { status: "REPEATING", progress: 0 });
+eq("status watching sets a missing start date", rules(cur({ status: "PLANNING", progress: 0, startedAt: blank }), 12, { status: "CURRENT" }), { status: "CURRENT", startedAt: today });
+eq("pausing changes nothing else", rules(cur({}), 12, { status: "PAUSED" }), { status: "PAUSED" });
+eq("same status and no progress change gives nothing", rules(cur({}), 12, { status: "CURRENT" }), {});
+eq("score 100 point", [spec.POINT_100.toRaw(78), spec.POINT_100.fromRaw(78)], [78, 78]);
+eq("score 10 point decimal", [spec.POINT_10_DECIMAL.toRaw(7.8), spec.POINT_10_DECIMAL.fromRaw(78)], [78, 7.8]);
+eq("score 10 point", [spec.POINT_10.toRaw(8), spec.POINT_10.fromRaw(78)], [80, 8]);
+eq("score 5 star", [spec.POINT_5.toRaw(4), spec.POINT_5.fromRaw(80)], [80, 4]);
+eq("score 3 smiley", [spec.POINT_3.toRaw(1), spec.POINT_3.toRaw(2), spec.POINT_3.toRaw(3), spec.POINT_3.fromRaw(35), spec.POINT_3.fromRaw(60), spec.POINT_3.fromRaw(85)], [35, 60, 85, 1, 2, 3]);
+console.log("\n" + pass + " passed, " + fail + " failed"); process.exit(fail ? 1 : 0);

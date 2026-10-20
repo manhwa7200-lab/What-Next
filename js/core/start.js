@@ -1,6 +1,8 @@
 /* js/core/start.js: service worker and app start */
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 
+window.addEventListener("online", () => { if(typeof flushPending === "function") flushPending(); });
+
 (async function start(){
   handleAuthRedirect();
   syncAuthUI();
@@ -14,6 +16,7 @@ if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch
     loadList(name);
     loadTrending();
     syncAniOptions();
+    flushPending();
     setTimeout(maybeAutoSync, 3000);
   }catch(err){
     const cn = localStorage.getItem("wn_name");

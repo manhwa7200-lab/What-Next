@@ -1,0 +1,33 @@
+// Checks the project hangs together: every file exists and is listed, ids match, CSS and JS parse, versions agree.
+// Run: node tests/check-structure.js
+const fs = require("fs"), path = require("path"), vm = require("vm");
+const root = path.join(__dirname, ".."), read = f => fs.readFileSync(path.join(root, f), "utf8");
+let bad = 0; const fail = m => { bad++; console.log("FAIL " + m); }, ok = m => console.log("PASS " + m);
+const boot = read("boot.js"), sw = read("sw.js"), html = read("index.html");
+const VIEWS = JSON.parse(boot.match(/const VIEWS = (\[[\s\S]*?\]);\n/)[1]), SCRIPTS = JSON.parse(boot.match(/const SCRIPTS = (\[[\s\S]*?\]);/)[1]);
+const FILES = JSON.parse(sw.match(/const FILES = (\[[\s\S]*?\]);\n/)[1]), CSS = [...html.matchAll(/href="([^"]+\.css)"/g)].map(m => m[1]);
+const loaded = [...VIEWS.map(v => v[1]), ...SCRIPTS, ...CSS];
+const missing = loaded.concat(FILES.filter(f => f !== "./")).filter(f => !fs.existsSync(path.join(root, f)));
+missing.length ? fail("files listed but missing: " + missing) : ok("every listed file exists");
+const notCached = loaded.filter(f => !FILES.includes(f)); notCached.length ? fail("loaded but not in sw.js: " + notCached) : ok("service worker lists every loaded file");
+const walk = d => fs.readdirSync(path.join(root, d), { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]);
+const orphan = ["css", "js", "views"].flatMap(walk).filter(f => /\.(css|js|html)$/.test(f) && !loaded.includes(f.replace(/\\/g, "/")));
+orphan.length ? fail("files on disk that are never loaded: " + orphan) : ok("no orphan files");
+const rev = boot.match(/const REV = "([^"]+)"/)[1], cache = sw.match(/const C = "([^"]+)"/)[1];
+cache === "wn-" + rev ? ok("boot.js REV and sw.js cache name agree (" + rev + ")") : fail("REV " + rev + " and cache " + cache + " do not match");
+SCRIPTS.forEach(f => { try{ new vm.Script(read(f), { filename: f }); }catch(e){ fail("syntax error in " + f + ": " + e.message); } });
+ok("all " + SCRIPTS.length + " scripts parse");
+const markup = VIEWS.map(v => read(v[1])).join("\n"), js = SCRIPTS.map(read).join("\n");
+const ids = [...markup.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
+const dup = [...new Set(ids.filter((x, i) => ids.indexOf(x) !== i))]; dup.length ? fail("duplicate ids: " + dup) : ok("no duplicate ids");
+const used = [...new Set([...js.matchAll(/\$\("#([A-Za-z0-9_]+)"\)/g)].map(m => m[1]))].filter(x => !ids.includes(x));
+used.length ? fail("script uses ids that do not exist: " + used) : ok("every id the scripts use exists");
+const screens = js.match(/const SCREENS = \{([\s\S]*?)\};/)[1], keys = [...screens.matchAll(/"?([A-Za-z-]+)"?:\s*"#/g)].map(m => m[1]);
+const goBad = [...new Set([...markup.matchAll(/data-go="([^"]+)"/g)].map(m => m[1]))].filter(x => !keys.includes(x));
+goBad.length ? fail("data-go targets not in SCREENS: " + goBad) : ok("every data-go target is a real screen");
+CSS.forEach(f => { const s = read(f).replace(/\/\*[\s\S]*?\*\//g, ""); let d = 0, min = 0; for(const c of s){ if(c === "{") d++; if(c === "}") d--; min = Math.min(min, d); } if(d || min) fail("unbalanced braces in " + f); });
+ok("CSS braces balanced in all " + CSS.length + " files");
+const cls = new Map(); CSS.forEach(f => { for(const m of read(f).replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/(?:^|\})\s*(\.[A-Za-z0-9_-]+)\s*\{/g)) cls.set(m[1], (cls.get(m[1]) || new Set()).add(f)); });
+const twice = [...cls].filter(([, s]) => s.size > 1).map(([k]) => k); twice.length ? fail("same class styled in several CSS files: " + twice) : ok("no class is styled in two CSS files");
+const tiny = [...cls.keys()].filter(k => /^\.c\d$/.test(k)); tiny.length ? fail("risky short class names (this caused the blank lists): " + tiny) : ok("no short class names like .c3");
+console.log(bad ? "\n" + bad + " problem(s)" : "\nStructure OK"); process.exit(bad ? 1 : 0);

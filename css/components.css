@@ -1,6 +1,6 @@
 /* css/components.css: chips, buttons, cards, tab bar, small widgets */
 .chip{
-  flex:1 1 0;min-width:72px;padding:12px 14px;font:inherit;font-weight:700;font-size:.95rem;color:var(--ink);
+  flex:1 1 auto;min-width:72px;padding:12px 14px;font:inherit;font-weight:700;font-size:.95rem;color:var(--ink);
   background:var(--chip);border:0;border-radius:999px;cursor:pointer;transition:transform .12s;
 }
 .chip:active,.go:active,.mini:active,.tab:active{transform:scale(.97)}
@@ -57,3 +57,5 @@ a.link{display:inline-block;margin-top:14px;color:var(--sakura);font-weight:700;
 .who button{white-space:nowrap}
 .pill{max-width:120px}
 .item h3 a{color:var(--ink);text-decoration:none}
+@media (max-width:360px){.chip{padding:12px 10px}}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 96px);max-width:90%;background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:14px;font-size:.9rem;font-weight:600;z-index:60;box-shadow:var(--shadow);text-align:center}

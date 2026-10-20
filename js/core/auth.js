@@ -36,25 +36,14 @@ function handleAuthRedirect(){
 
 async function markDone(e, p, btn){
   btn.disabled = true; btn.textContent = "Saving…";
-  try{
-    const vars = { id: e.media.id, p: p.to };
-    if(p.total && p.to >= p.total) vars.s = "COMPLETED";
-    else if(e.status === "PLANNING") vars.s = "CURRENT";
-    const { json } = await gql(
-      "mutation($id:Int,$p:Int,$s:MediaListStatus){SaveMediaListEntry(mediaId:$id,progress:$p,status:$s){id progress status}}", vars);
-    if(json.errors) throw new Error(json.errors[0].message);
-    const saved = json.data.SaveMediaListEntry;
-    e.progress = saved.progress; e.status = saved.status;
-    bumpDay(p.n);
-    state.skipped.clear();
-    if(saved.status === "COMPLETED") return afterFinish(e);
-    pick();
-    const t = document.createElement("div"); t.className = "msg";
-    t.textContent = "Saved to AniList: " + (e.media.title.english || e.media.title.romaji) + " is now at " + saved.progress + ". Here's the next pick.";
-    $("#result").prepend(t);
-  }catch(err){
-    btn.disabled = false; btn.textContent = "Couldn't save: " + err.message;
-  }
+  const r = await track(e.media.id, p.isAnime ? "anime" : "manga", { progress: p.to }, { quiet: true });
+  if(!r.ok && !r.queued){ btn.disabled = false; btn.textContent = "Couldn't save: " + ((r.error && r.error.message) || "unknown error"); return; }
+  state.skipped.clear();
+  if(e.status === "COMPLETED") return afterFinish(e);
+  pick();
+  const t = document.createElement("div"); t.className = "msg";
+  t.textContent = (r.queued ? "Saved on this device: " : "Saved to AniList: ") + tt(e.media) + " is now at " + e.progress + ". Here's the next pick.";
+  $("#result").prepend(t);
 }
 
 // ---------- Login: the client ID is built in, like other AniList apps ----------
@@ -99,7 +88,7 @@ if(isNative){
   if(A && A.addListener){
     A.addListener("appUrlOpen", ev => handleAuthUrl(ev.url));
     A.addListener("backButton", () => {
-      if(!$("#editor").hidden) $("#editor").hidden = true;
+      if(!$("#editor").hidden) editorBack();
       else if(!$("#qv").hidden) $("#qv").hidden = true;
       else if(!$("#fsheet").hidden) $("#fsheet").hidden = true;
       else if(!$("#csheet").hidden) $("#csheet").hidden = true;
@@ -116,7 +105,7 @@ $("#logout2").onclick = () => $("#logout").click();
 $("#appsLink").onclick = () => openExternal("https://anilist.co/settings/apps");
 $("#logout").onclick = () => {
   clearAuth();
-  state.items = []; state.user = ""; state.uid = 0; state.skipped.clear(); lists.anime.entries = lists.manga.entries = null; profLoaded = false;
+  state.items = []; state.user = ""; state.uid = 0; state.skipped.clear(); lists.anime = mkList(); lists.manga = mkList(); clearListCaches(); profLoaded = false;
   try{ localStorage.removeItem("wn_cache"); localStorage.removeItem("wn_name"); }catch(_){}
   $("#result").replaceChildren(); $("#dlist").replaceChildren();
 };

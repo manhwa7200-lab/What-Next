@@ -3,15 +3,12 @@
 const hide = new Set();
 try{ JSON.parse(localStorage.getItem("wn_hide") || "[]").forEach(x => hide.add(x)); }catch(_){}
 const saveHide = () => { try{ localStorage.setItem("wn_hide", JSON.stringify([...hide])); }catch(_){} };
-const SAVE = "mutation($id:Int,$s:MediaListStatus,$r:Int){SaveMediaListEntry(mediaId:$id,status:$s,scoreRaw:$r){id}}";
 
-async function addPlanning(id, btn){
+async function addPlanning(id, btn, type){
   btn.disabled = true; btn.textContent = "Adding…";
-  try{
-    const { json } = await gql(SAVE, { id, s: "PLANNING" });
-    if(json.errors) throw new Error(json.errors[0].message);
-    btn.textContent = "Added to Planning";
-  }catch(err){ btn.disabled = false; btn.textContent = "Couldn't add: " + err.message; }
+  const r = await trackSave(id, type || "anime", { status: "PLANNING" }, { quiet: true });
+  if(r.ok || r.queued) btn.textContent = r.queued ? "Saved offline" : "Added to Planning";
+  else { btn.disabled = false; btn.textContent = "Couldn't add: " + ((r.error && r.error.message) || "error"); }
 }
 
 async function afterFinish(e){
@@ -23,11 +20,9 @@ async function afterFinish(e){
     const b = document.createElement("button"); b.className = "chip"; b.style.minWidth = "52px"; b.textContent = n;
     b.onclick = async () => {
       row.querySelectorAll("button").forEach(x => x.disabled = true);
-      try{
-        const { json } = await gql(SAVE, { id: e.media.id, r: n * 10 });
-        if(json.errors) throw new Error(json.errors[0].message);
-        note.textContent = "Saved: " + title + " rated " + n + "/10."; row.remove();
-      }catch(err){ note.textContent = "Couldn't save rating: " + err.message; row.querySelectorAll("button").forEach(x => x.disabled = false); }
+      const r = await trackSave(e.media.id, e.media.type === "ANIME" ? "anime" : "manga", { score: n * 10 }, { quiet: true });
+      if(r.ok || r.queued){ note.textContent = (r.queued ? "Saved on this device: " : "Saved: ") + title + " rated " + n + "/10."; row.remove(); }
+      else { note.textContent = "Couldn't save rating: " + ((r.error && r.error.message) || "error"); row.querySelectorAll("button").forEach(x => x.disabled = false); }
     };
     row.append(b);
   }
@@ -42,7 +37,7 @@ async function afterFinish(e){
       seq.forEach(x => {
         const n = x.node, d = document.createElement("div"); d.className = "msg"; d.style.marginTop = "8px";
         const a = document.createElement("a"); a.href = n.siteUrl; a.target = "_blank"; a.rel = "noopener"; a.textContent = n.title.english || n.title.romaji; d.append(a);
-        if(!onList.has(n.id)){ const b = document.createElement("button"); b.className = "mini"; b.textContent = "+ Planning"; b.onclick = () => addPlanning(n.id, b); d.append(document.createElement("br"), b); }
+        if(!onList.has(n.id)){ const b = document.createElement("button"); b.className = "mini"; b.textContent = "+ Planning"; b.onclick = () => addPlanning(n.id, b, e.media.type === "ANIME" ? "anime" : "manga"); d.append(document.createElement("br"), b); }
         box.insertBefore(d, next);
       });
     }

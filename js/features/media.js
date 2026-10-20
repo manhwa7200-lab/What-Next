@@ -2,7 +2,6 @@
 // ---------- Media pages, list editor, trending ----------
 const MEDIA_Q = "query($id:Int){Media(id:$id){id idMal type siteUrl isAdult title{romaji english native} synonyms bannerImage coverImage{extraLarge color} description(asHtml:false) format status episodes chapters volumes duration season seasonYear startDate{year month day} endDate{year month day} source countryOfOrigin averageScore popularity favourites isFavourite genres rankings{rank type context allTime} tags{name rank isMediaSpoiler isGeneralSpoiler description} studios(isMain:true){nodes{name}} nextAiringEpisode{airingAt episode} trailer{id site} externalLinks{site url type} characters(sort:[ROLE,RELEVANCE],perPage:14){edges{role node{id siteUrl name{full} image{medium}}}} staff(sort:[RELEVANCE],perPage:14){edges{role node{id siteUrl name{full} image{medium}}}} relations{edges{relationType node{id type format title{romaji english} coverImage{large}}}} recommendations(sort:RATING_DESC,perPage:12){nodes{rating mediaRecommendation{id type format title{romaji english} coverImage{large} averageScore seasonYear episodes chapters}}} mediaListEntry{id status progress score(format:POINT_100) repeat notes private priority startedAt{year month day} completedAt{year month day} customLists}}}";
 const TREND_Q = "query($t:MediaType){Page(perPage:12){media(type:$t,sort:TRENDING_DESC,isAdult:false){id type title{romaji english} bannerImage coverImage{extraLarge} averageScore favourites genres description(asHtml:false) studios(isMain:true){nodes{name}} staff(sort:[RELEVANCE],perPage:3){edges{node{name{full}}}}}}}";
-const SAVE_FULL = "mutation($mediaId:Int,$status:MediaListStatus,$scoreRaw:Int,$progress:Int,$repeat:Int,$notes:String,$priority:Int,$private:Boolean,$startedAt:FuzzyDateInput,$completedAt:FuzzyDateInput,$customLists:[String]){SaveMediaListEntry(mediaId:$mediaId,status:$status,scoreRaw:$scoreRaw,progress:$progress,repeat:$repeat,notes:$notes,priority:$priority,private:$private,startedAt:$startedAt,completedAt:$completedAt,customLists:$customLists){id status progress}}";
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const mcache = new Map(), mstack = [];
 const fd = d => (!d || !d.year) ? "?" : (d.day ? d.day + " " : "") + (d.month ? MON[d.month - 1] + " " : "") + d.year;
@@ -66,19 +65,13 @@ function renderMedia(m){
   sbtn.onclick = () => { if(auth.token) openEditor(m); };
   st.append(cell(m.averageScore || "–", "Score"), cell((m.favourites || 0).toLocaleString(), "Favorites"), sbtn);
   box.append(st);
-  if(e && total && (e.status === "CURRENT" || e.status === "REPEATING") && e.progress < total){
-    const plus = el("button", "go alt", "+1 " + (type === "anime" ? "episode" : "chapter") + "  (now " + e.progress + " / " + total + ")");
-    plus.onclick = async () => {
-      plus.disabled = true;
-      try{
-        const p = e.progress + 1, vars = { mediaId: m.id, progress: p };
-        if(p >= total) vars.status = "COMPLETED";
-        const { json } = await gql("mutation($mediaId:Int,$progress:Int,$status:MediaListStatus){SaveMediaListEntry(mediaId:$mediaId,progress:$progress,status:$status){id}}", vars);
-        if(json.errors) throw new Error(json.errors[0].message);
-        mcache.delete(m.id); lists.anime.entries = lists.manga.entries = null; showMedia(m.id);
-      }catch(err){ plus.disabled = false; plus.textContent = "Couldn't save: " + err.message; }
-    };
-    box.append(plus);
+  if(e && auth.token && e.status !== "COMPLETED" && !(total && e.progress >= total)){
+    const unit = type === "anime" ? "episode" : "chapter", row = el("div"), minus = el("button", "go alt", "−1"), plus = el("button", "go alt", "+1 " + unit + "  (now " + e.progress + (total ? " / " + total : "") + ")");
+    row.style.cssText = "display:flex;gap:10px;margin-top:14px"; minus.style.cssText = "width:64px;flex:none;margin:0"; plus.style.cssText = "flex:1;margin:0";
+    minus.disabled = e.progress <= 0; minus.setAttribute("aria-label", "Remove one " + unit);
+    minus.onclick = () => { track(m.id, type, { progress: e.progress - 1 }); };
+    plus.onclick = () => { track(m.id, type, { progress: e.progress + 1 }); };
+    row.append(minus, plus); box.append(row);
   }
   if(m.genres && m.genres.length){ const g = el("div", "gtags"); g.style.marginTop = "16px"; m.genres.forEach(x => g.append(gtag(x))); box.append(g); }
   // rankings, trailer, where to watch

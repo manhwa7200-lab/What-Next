@@ -1,6 +1,6 @@
 /* js/features/lists.js: Anime and Manga lists, filter and customise sheets */
 // ---------- AniList collection reader (handles AniList's 500-entry chunks) ----------
-const ENTRY_F = "status progress media{id type isAdult siteUrl title{romaji english} coverImage{extraLarge large} episodes chapters duration averageScore genres nextAiringEpisode{episode airingAt}}";
+const ENTRY_F = "status progress repeat startedAt{year month day} completedAt{year month day} media{id type isAdult siteUrl title{romaji english} coverImage{extraLarge large} episodes chapters duration averageScore genres nextAiringEpisode{episode airingAt}}";
 async function collection(user, type, filter, fields){
   const out = []; let chunk = 1, more = true;
   while(more){
@@ -18,7 +18,7 @@ async function collection(user, type, filter, fields){
 // ---------- Anime and manga lists ----------
 const STATUS_LABEL = t => ({ CURRENT: t === "anime" ? "Watching" : "Reading", PLANNING: "Planning", COMPLETED: "Completed", PAUSED: "Paused", DROPPED: "Dropped", REPEATING: t === "anime" ? "Rewatching" : "Rereading" });
 const STATUS_ORDER = ["CURRENT", "REPEATING", "PLANNING", "PAUSED", "COMPLETED", "DROPPED"];
-const LIST_F = "mediaId status progress score(format:POINT_100) updatedAt media{id siteUrl title{romaji english} coverImage{large} format status episodes chapters averageScore popularity genres countryOfOrigin startDate{year}}";
+const LIST_F = "mediaId status progress repeat startedAt{year month day} completedAt{year month day} score(format:POINT_100) updatedAt media{id siteUrl title{romaji english} coverImage{large} format status episodes chapters averageScore popularity genres countryOfOrigin startDate{year}}";
 const FORMATS = { anime: ["TV", "TV_SHORT", "MOVIE", "SPECIAL", "OVA", "ONA", "MUSIC"], manga: ["MANGA", "NOVEL", "ONE_SHOT"] };
 const LS = (k, d) => { try{ return Object.assign({}, d, JSON.parse(localStorage.getItem(k) || "{}")); }catch(_){ return Object.assign({}, d); } };
 const LSset = (k, v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(_){} };
@@ -26,7 +26,9 @@ const defFilter = () => ({ sort: "UPDATED", format: "", mstatus: "", country: ""
 const ly = LS("wn_ly", { layout: "grid", cols: 3, hideUnscored: false, hideProgress: false });
 const fstore = LS("wn_lf", { persist: false, anime: null, manga: null });
 const lf = { anime: (fstore.persist && fstore.anime) || defFilter(), manga: (fstore.persist && fstore.manga) || defFilter() };
-const lists = { anime: { entries: null, status: "ALL", q: "", shown: 60 }, manga: { entries: null, status: "ALL", q: "", shown: 60 } };
+const LIST_BATCH = 48;
+const mkList = () => ({ entries: null, status: "ALL", q: "", shown: LIST_BATCH, stale: false, offline: false, cachedAt: 0, rev: 0, sig: "", drawn: 0, refreshing: false });
+const lists = { anime: mkList(), manga: mkList() };
 let curType = "anime";
 const tt = m => { const t = m.title, p = localStorage.getItem("wn_tlang") || "ENGLISH"; return (p === "ROMAJI" ? t.romaji : p === "NATIVE" ? (t.native || t.romaji) : t.english) || t.english || t.romaji || "Untitled"; };
 const yearOf = m => (m.startDate && m.startDate.year) || 0;
@@ -36,20 +38,57 @@ const SORTS = {
   POP: (a, b) => (b.m.popularity || 0) - (a.m.popularity || 0), YEAR: (a, b) => yearOf(b.m) - yearOf(a.m)
 };
 
+const lcacheKey = type => "wn_list_" + type + "_" + String(state.user || "").toLowerCase();
+function readListCache(type){ try{ const r = JSON.parse(localStorage.getItem(lcacheKey(type)) || "null"); return r && Array.isArray(r.entries) ? r : null; }catch(_){ return null; } }
+function writeListCache(type, entries){ try{ localStorage.setItem(lcacheKey(type), JSON.stringify({ at: Date.now(), entries })); }catch(_){} }
+function clearListCaches(){ try{ Object.keys(localStorage).filter(k => k.indexOf("wn_list_") === 0).forEach(k => localStorage.removeItem(k)); }catch(_){} }
+function setListNote(t){ const n = $("#listNote"); n.hidden = !t; n.textContent = t || ""; }
+async function fetchEntries(type){
+  const raw = await collection(state.user, type.toUpperCase(), "", LIST_F), seen = new Map();
+  for(const e of raw){ if(e && e.media && !seen.has(e.mediaId)) seen.set(e.mediaId, { id: e.mediaId, status: e.status, progress: e.progress || 0, repeat: e.repeat || 0, startedAt: e.startedAt, completedAt: e.completedAt, score: e.score || 0, updatedAt: e.updatedAt || 0, m: e.media }); }
+  return [...seen.values()];
+}
+function showListLoading(type){
+  const body = $("#listBody"); body.className = ly.layout === "rows" ? "lrows" : "lgrid cols-" + ly.cols;
+  body.replaceChildren(...Array.from({ length: ly.layout === "rows" ? 6 : 9 }, () => el("div", "lcard skel")));
+  $("#listStatus").replaceChildren(); $("#listMore").hidden = true; $("#listCount").textContent = "Loading…"; setListNote("");
+}
+function showListError(type, err){
+  const offline = /Failed to fetch|NetworkError|Load failed/i.test(err.message), box = el("div", "msg state");
+  box.append(el("b", null, offline ? "Can't reach AniList" : "Couldn't load your " + type + " list"), el("p", "sub", offline ? "Check your connection and try again." : err.message));
+  const retry = el("button", "go", "Retry"); retry.onclick = () => { showListLoading(type); loadFresh(type); };
+  box.append(retry); $("#listBody").className = ""; $("#listBody").replaceChildren(box);
+  $("#listStatus").replaceChildren(); $("#listMore").hidden = true; $("#listCount").textContent = "";
+}
+async function loadFresh(type){
+  try{
+    const entries = await fetchEntries(type), L = lists[type];
+    L.entries = entries; L.stale = false; L.offline = false; L.cachedAt = Date.now(); L.rev++; writeListCache(type, entries);
+    if(curType === type) renderList();
+  }catch(err){ if(curType === type) showListError(type, err); }
+}
+async function refreshList(type){
+  const L = lists[type]; if(L.refreshing) return; L.refreshing = true;
+  try{
+    const entries = await fetchEntries(type);
+    L.entries = entries; L.stale = false; L.offline = false; L.cachedAt = Date.now(); L.rev++; writeListCache(type, entries);
+  }catch(_){ L.offline = true; }
+  L.refreshing = false;
+  if(curType === type && !$("#lists").hidden) renderList({ keepScroll: true });
+}
+// After an edit elsewhere: keep what is on screen, mark it stale, and refresh quietly.
+function invalidateLists(){
+  for(const t of ["anime", "manga"]){ if(lists[t].entries){ lists[t].stale = true; lists[t].rev++; } }
+  if(!$("#lists").hidden && lists[curType].entries) refreshList(curType);
+}
 async function openList(type){
   curType = type; const L = lists[type];
   $("#listTitle").textContent = type === "anime" ? "Anime List" : "Manga List";
   $("#listSearch").value = L.q;
-  if(!L.entries){
-    $("#listBody").className = ""; $("#listBody").replaceChildren(el("div", "msg", "Loading your " + type + " list…"));
-    $("#listStatus").replaceChildren(); $("#listMore").hidden = true;
-    try{
-      const raw = await collection(state.user, type.toUpperCase(), "", LIST_F), seen = new Map();
-      for(const e of raw){ if(!seen.has(e.mediaId)) seen.set(e.mediaId, { id: e.mediaId, status: e.status, progress: e.progress || 0, score: e.score || 0, updatedAt: e.updatedAt || 0, m: e.media }); }
-      L.entries = [...seen.values()];
-    }catch(err){ $("#listBody").replaceChildren(el("div", "msg", err.message.includes("Failed to fetch") ? "Couldn't reach AniList. Check your connection." : err.message)); return; }
-  }
-  if(curType === type) renderList();
+  if(L.entries){ renderList(); if(L.stale) refreshList(type); return; }
+  const c = readListCache(type);
+  if(c){ L.entries = c.entries; L.cachedAt = c.at; L.stale = true; renderList(); refreshList(type); return; }
+  showListLoading(type); await loadFresh(type);
 }
 function passes(e, f, type){
   const m = e.m;
@@ -66,70 +105,84 @@ function passes(e, f, type){
   if(f.ge.some(x => g.includes(x))) return false;
   return true;
 }
-function renderList(){
+const statusCounts = entries => { const c = {}; entries.forEach(e => { c[e.status] = (c[e.status] || 0) + 1; }); return c; };
+function emptyState(type, L){
+  const box = el("div", "msg state");
+  if(!L.entries.length){ box.append(el("b", null, "Your " + type + " list is empty"), el("p", "sub", "Add titles from Discover or from a media page.")); return box; }
+  const filtered = L.q.trim() || JSON.stringify(lf[type]) !== JSON.stringify(defFilter());
+  box.append(el("b", null, "Nothing to show here"), el("p", "sub", filtered ? "No titles match your search or filters." : "No " + type + " entries have this status."));
+  if(filtered){
+    const b = el("button", "go alt", "Clear search and filters");
+    b.onclick = () => { L.q = ""; $("#listSearch").value = ""; lf[type] = defFilter(); fstore[type] = lf[type]; LSset("wn_lf", fstore); L.shown = LIST_BATCH; renderList(); };
+    box.append(b);
+  }
+  return box;
+}
+function renderList(opts){
   const type = curType, L = lists[type], f = lf[type], lab = STATUS_LABEL(type);
   if(!L.entries) return;
-  const q = L.q.trim().toLowerCase();
+  const y = window.scrollY, q = L.q.trim().toLowerCase();
   const rows = L.entries.filter(e => passes(e, f, type) && (!q || (tt(e.m) + " " + (e.m.title.romaji || "")).toLowerCase().includes(q)));
-  const counts = {}; rows.forEach(e => { counts[e.status] = (counts[e.status] || 0) + 1; });
-  if(L.status !== "ALL" && !counts[L.status]) L.status = "ALL";
+  const all = statusCounts(L.entries), counts = statusCounts(rows);
   const chips = $("#listStatus"); chips.replaceChildren();
-  for(const s of ["ALL", ...STATUS_ORDER.filter(x => counts[x])]){
-    const b = el("button", "chip", (s === "ALL" ? "All" : lab[s]) + " " + (s === "ALL" ? rows.length : counts[s]));
-    b.setAttribute("aria-pressed", String(L.status === s)); b.onclick = () => { L.status = s; L.shown = 60; renderList(); }; chips.append(b);
+  for(const s of ["ALL", ...STATUS_ORDER.filter(x => all[x] || x === L.status)]){
+    const n = s === "ALL" ? rows.length : (counts[s] || 0);
+    const b = el("button", "chip" + (n ? "" : " dim"), (s === "ALL" ? "All" : lab[s]) + " " + n);
+    b.setAttribute("aria-pressed", String(L.status === s));
+    b.onclick = () => { L.status = s; L.shown = LIST_BATCH; renderList(); };
+    chips.append(b);
   }
   const view = (L.status === "ALL" ? rows : rows.filter(e => e.status === L.status)).slice();
   view.sort(L.status === "ALL" && f.sort === "UPDATED" ? (a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status) || b.updatedAt - a.updatedAt : (SORTS[f.sort] || SORTS.UPDATED));
   $("#listCount").textContent = (L.status === "ALL" ? "All" : lab[L.status]) + " (" + view.length + ")";
-  const body = $("#listBody");
-  body.className = ly.layout === "rows" ? "lrows" : "lgrid c" + ly.cols;
-  body.replaceChildren(...(view.length ? view.slice(0, L.shown).map(e => lcard(e, type)) : [el("div", "msg", "Nothing matches. Try changing the filter.")]));
-  $("#listMore").hidden = view.length <= L.shown;
+  const body = $("#listBody"), shown = Math.min(view.length, L.shown);
+  const sig = [type, L.status, q, JSON.stringify(f), ly.layout, ly.cols, ly.hideUnscored, ly.hideProgress, L.rev, view.length].join("|");
+  if(sig === L.sig && L.drawn > 0 && L.drawn < shown){          // "Show more": add only the next batch
+    view.slice(L.drawn, shown).forEach(e => body.append(lcard(e, type))); L.drawn = shown;
+  }else if(!(sig === L.sig && L.drawn === shown && shown > 0)){  // anything else that changed: rebuild
+    body.className = ly.layout === "rows" ? "lrows" : "lgrid cols-" + ly.cols;
+    body.replaceChildren(...(view.length ? view.slice(0, shown).map(e => lcard(e, type)) : [emptyState(type, L)]));
+    L.drawn = view.length ? shown : 0; L.sig = sig;
+  }
+  const more = $("#listMore"); more.hidden = view.length <= shown;
+  more.textContent = "Show more (" + shown + " of " + view.length + ")";
+  setListNote(L.offline ? "Offline. Showing your saved list" + (L.cachedAt ? " from " + new Date(L.cachedAt).toLocaleString() : "") + "." : "");
+  if(opts && opts.keepScroll) window.scrollTo(0, y);
 }
 function lcard(e, type){
-  const m = e.m, card = el("button", "lcard"), total = type === "anime" ? m.episodes : m.chapters;
-  const img = new Image(); img.alt = ""; img.loading = "lazy"; img.src = m.coverImage.large;
+  const m = e.m, total = type === "anime" ? m.episodes : m.chapters, lab = STATUS_LABEL(type)[e.status] || e.status;
+  const card = el("div", "lcard"); card.dataset.s = e.status;
+  const main = el("button", "lmain"); main.type = "button";
+  main.setAttribute("aria-label", tt(m) + ", " + lab + ", " + e.progress + " of " + (total || "unknown"));
+  const cover = el("div", "lcover"), img = new Image(); img.alt = ""; img.loading = "lazy"; img.decoding = "async";
+  if(m.coverImage && m.coverImage.large) img.src = m.coverImage.large;
+  cover.append(img, el("span", "sb", lab));
   const info = el("div", "li"), meta = el("div", "lm");
-  info.append(el("div", "lt", tt(m)));
-  if(!(ly.hideUnscored && !e.score)) meta.append(el("span", "sc", "★ " + e.score));
-  if(!ly.hideProgress) meta.append(el("span", null, e.progress + " / " + (total || "?")));
-  info.append(meta); card.append(img, info); card.onclick = () => openMedia(m.id);
+  info.append(el("div", "lt", tt(m)), el("div", "ls", lab));
+  if(!(ly.hideUnscored && !e.score)) meta.append(el("span", "sc", "★ " + scoreText(e.score)));
+  if(!ly.hideProgress) meta.append(el("span", "lp", e.progress + " / " + (total || "?")));
+  info.append(meta);
+  if(!ly.hideProgress && total){ const tr = el("div", "ltrack"), fill = el("i"); fill.style.width = Math.min(100, Math.round(e.progress / total * 100)) + "%"; tr.append(fill); info.append(tr); }
+  main.append(cover, info); main.onclick = () => openMedia(m.id); card.append(main);
+  if(auth.token && ["CURRENT", "REPEATING", "PLANNING", "PAUSED"].includes(e.status) && !(total && e.progress >= total)){
+    const plus = el("button", "lplus", "+1"); plus.type = "button"; plus.setAttribute("aria-label", "Add one " + (type === "anime" ? "episode" : "chapter"));
+    plus.onclick = ev => { ev.stopPropagation(); bumpEntry(e, type, plus); }; card.append(plus);
+  }
   return card;
 }
-function quickView(e, type){
-  const m = e.m, box = $("#qvBox"), total = type === "anime" ? m.episodes : m.chapters, lab = STATUS_LABEL(type);
-  box.replaceChildren();
-  const top = el("div", "qvtop"), img = new Image(); img.alt = ""; img.src = m.coverImage.large;
-  const info = el("div");
-  info.append(el("h3", null, tt(m)), el("p", "sub", (lab[e.status] || e.status) + " · " + (m.format || "").replace(/_/g, " ")), el("p", "sub", "★ " + (e.score || "–") + "  ·  Average " + (m.averageScore || "–")));
-  top.append(img, info); box.append(top);
-  const prog = el("div", "qvprog"), minus = el("button", "chip", "−1"), plus = el("button", "chip", "+1"), label = el("b", null, e.progress + " / " + (total || "?"));
-  const setP = async p => {
-    if(p < 0 || (total && p > total)) return;
-    minus.disabled = plus.disabled = true;
-    try{
-      const vars = { id: m.id, p };
-      if(total && p >= total) vars.s = "COMPLETED"; else if(e.status === "PLANNING") vars.s = "CURRENT";
-      const { json } = await gql("mutation($id:Int,$p:Int,$s:MediaListStatus){SaveMediaListEntry(mediaId:$id,progress:$p,status:$s){progress status}}", vars);
-      if(json.errors) throw new Error(json.errors[0].message);
-      const r = json.data.SaveMediaListEntry; e.progress = r.progress; e.status = r.status;
-      label.textContent = e.progress + " / " + (total || "?"); renderList();
-    }catch(err){ label.textContent = "Couldn't save: " + err.message; }
-    minus.disabled = plus.disabled = false;
-  };
-  minus.onclick = () => setP(e.progress - 1); plus.onclick = () => setP(e.progress + 1);
-  prog.append(minus, label, plus);
-  const a = el("a", "link", "Open on AniList"); a.href = m.siteUrl; a.target = "_blank"; a.rel = "noopener";
-  const close = el("button", "go alt", "Close"); close.onclick = () => { $("#qv").hidden = true; };
-  box.append(prog, a, close); $("#qv").hidden = false;
+function bumpEntry(e, type, btn){
+  btn.disabled = true;
+  track(e.id, type, { progress: e.progress + 1 }).then(r => {
+    if(!r.ok && !r.queued) setListNote("Couldn't save progress: " + ((r.error && r.error.message) || "unknown error"));
+  });
 }
 $("#qv").addEventListener("click", ev => { if(ev.target.id === "qv") $("#qv").hidden = true; });
-$("#listMore").onclick = () => { lists[curType].shown += 60; renderList(); };
+$("#listMore").onclick = () => { lists[curType].shown += LIST_BATCH; renderList(); };
 $("#lSearchBtn").onclick = () => {
   const i = $("#listSearch"); i.hidden = !i.hidden;
   if(i.hidden){ i.value = ""; lists[curType].q = ""; renderList(); } else i.focus();
 };
-$("#listSearch").oninput = ev => { lists[curType].q = ev.target.value; lists[curType].shown = 60; renderList(); };
+$("#listSearch").oninput = ev => { lists[curType].q = ev.target.value; lists[curType].shown = LIST_BATCH; renderList(); };
 
 // Filter sheet
 function setTri(b, s){ b.dataset.s = s; b.setAttribute("aria-pressed", String(s === 1)); b.classList.toggle("ex", s === 2); b.textContent = (s === 1 ? "+ " : s === 2 ? "− " : "") + b.dataset.n; }
@@ -155,7 +208,7 @@ $("#fsApply").onclick = () => {
     yFrom: $("#fsYFrom").value.trim(), yTo: $("#fsYTo").value.trim(), cMin: $("#fsCMin").value.trim(), cMax: $("#fsCMax").value.trim(), score: $("#fsScore").value.trim(), gi: [], ge: [] };
   document.querySelectorAll("#fsGenres .chip").forEach(b => { if(b.dataset.s === "1") f.gi.push(b.dataset.n); if(b.dataset.s === "2") f.ge.push(b.dataset.n); });
   lf[curType] = f; fstore.persist = $("#fsPersist").checked; fstore.anime = lf.anime; fstore.manga = lf.manga; LSset("wn_lf", fstore);
-  lists[curType].shown = 60; $("#fsheet").hidden = true; renderList();
+  lists[curType].shown = LIST_BATCH; $("#fsheet").hidden = true; renderList();
 };
 
 // Customise sheet
@@ -168,3 +221,11 @@ $("#csLayout").addEventListener("click", ev => { const b = ev.target.closest(".c
 $("#csCols").addEventListener("click", ev => { const b = ev.target.closest(".chip"); if(b){ ly.cols = +b.dataset.v; chipSet("#csCols", String(ly.cols)); saveLy(); } });
 $("#csHideUnscored").onchange = ev => { ly.hideUnscored = ev.target.checked; saveLy(); };
 $("#csHideProgress").onchange = ev => { ly.hideProgress = ev.target.checked; saveLy(); };
+
+// Long-press the list title to see what the list actually rendered (for bug reports).
+(function(){
+  let t = null; const title = $("#listTitle");
+  const start = () => { t = setTimeout(async () => { const p = $("#listDiag"); p.hidden = false; p.textContent = await diagReport(); }, 700); };
+  const stop = () => { clearTimeout(t); };
+  ["pointerdown", "touchstart"].forEach(n => title.addEventListener(n, start)); ["pointerup", "pointerleave", "touchend", "touchmove"].forEach(n => title.addEventListener(n, stop));
+})();

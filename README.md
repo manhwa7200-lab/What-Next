@@ -88,11 +88,36 @@ views/
   settings/         menu and one file per settings page
   sheets/           filter sheet, customise sheet, media page and editor containers
 js/
-  core/             core and Pick engine, tabs, auth, theme, start
+  core/             compat, core and Pick engine, tabs, auth, tracker, theme, start
   features/         discover, lists, media page, editor, sync, chat, settings, and so on
 ```
 
+tests/              unit, structure, and screen tests (see below)
+```
+
 If you add a new screen or script file, add it to the lists inside `boot.js` and `sw.js`.
+
+**Releasing a change:** whenever any file changes, change `REV` in `boot.js` and the matching name in `sw.js` (for example `2.1.1-r5` and `wn-2.1.1-r5`). That makes every phone fetch the new files together instead of mixing old and new ones. `node tests/check-structure.js` fails if the two do not match.
+
+## Tracking (one place for every change)
+
+Every change to a list entry goes through `js/core/tracker.js`: the +1 buttons on the lists, the media page, Pick's "Mark as done", the list editor, and adding to Planning.
+
+- Status and dates follow the same rules everywhere: +1 on a Planning, Paused, or Dropped title starts it and fills the start date; reaching the last episode completes it and fills the finish date; finishing a rewatch completes it and adds one rewatch; lowering a completed title reopens it; starting a rewatch resets progress to 0.
+- The screen updates instantly. AniList is updated right after, one request per title at a time, and a failed save is rolled back with a message.
+- With no connection the change is kept on the device and sent when you are back online.
+- Scores follow your AniList score format (100 point, 10 point decimal, 10 point, 5 star, or smiley).
+
+## Tests
+
+```
+node tests/check-structure.js        files, lists, ids, CSS, versions
+node tests/unit/rules.test.js        tracking rules and score formats
+python tests/e2e/run_all.py          real-browser tests against a fake AniList (needs: pip install playwright && playwright install chromium)
+```
+
+The `Tests` workflow (`.github/workflows/tests.yml`) runs all three on every push.
+
 
 ## Getting the files into your repo from a phone
 

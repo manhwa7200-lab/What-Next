@@ -38,7 +38,7 @@ function itemCard(m, onList){
   a.textContent = onList ? "On your list. Open on AniList" : "Open on AniList";
   info.append(h, meta, gen, a);
   const acts = document.createElement("div");
-  if(!onList){ const b = document.createElement("button"); b.className = "mini"; b.textContent = "+ Planning"; b.onclick = () => addPlanning(m.id, b); acts.append(b); }
+  if(!onList){ const b = document.createElement("button"); b.className = "mini"; b.textContent = "+ Planning"; b.onclick = () => addPlanning(m.id, b, dState.type.toLowerCase()); acts.append(b); }
   const x = document.createElement("button"); x.className = "mini"; x.textContent = "Not interested";
   x.onclick = () => { hide.add(m.id); saveHide(); card.remove(); }; acts.append(x);
   info.append(acts);
