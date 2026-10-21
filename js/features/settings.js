@@ -46,3 +46,5 @@ $("#resetFilters").onclick = () => {
   lf.anime = defFilter(); lf.manga = defFilter(); fstore.anime = fstore.manga = null; LSset("wn_lf", fstore);
   $("#setListsMsg").textContent = "List filters were reset.";
 };
+$("#aboutBuild").textContent = "Build " + (window.__REV || "unknown");
+$("#cleanReload").onclick = cleanReload;

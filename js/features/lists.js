@@ -42,7 +42,21 @@ const lcacheKey = type => "wn_list_" + type + "_" + String(state.user || "").toL
 function readListCache(type){ try{ const r = JSON.parse(localStorage.getItem(lcacheKey(type)) || "null"); return r && Array.isArray(r.entries) ? r : null; }catch(_){ return null; } }
 function writeListCache(type, entries){ try{ localStorage.setItem(lcacheKey(type), JSON.stringify({ at: Date.now(), entries })); }catch(_){} }
 function clearListCaches(){ try{ Object.keys(localStorage).filter(k => k.indexOf("wn_list_") === 0).forEach(k => localStorage.removeItem(k)); }catch(_){} }
-function setListNote(t){ const n = $("#listNote"); n.hidden = !t; n.textContent = t || ""; }
+function setListNote(t){ const n = $("#listNote"); n.hidden = !t; n.textContent = t || ""; n.classList.remove("warn"); n.onclick = null; }
+// If the cards are squashed (old or mismatched files), say so and offer a clean reload instead of a blank list.
+let guardTimer = 0;
+function guardListLayout(){
+  clearTimeout(guardTimer);
+  guardTimer = setTimeout(() => {
+    const body = $("#listBody"), card = body && body.querySelector(".lcard:not(.skel)");
+    if($("#lists").hidden || !card) return;
+    const cr = card.getBoundingClientRect(), br = body.getBoundingClientRect(), pr = body.parentElement.getBoundingClientRect();
+    if(cr.height >= 60 && br.width >= pr.width - 6) return;
+    const n = $("#listNote"); n.hidden = false; n.classList.add("warn");
+    n.textContent = "Display problem found: this copy of the app has old or mismatched files. Tap here to reload a clean copy.";
+    n.onclick = () => cleanReload();
+  }, 500);
+}
 async function fetchEntries(type){
   const raw = await collection(state.user, type.toUpperCase(), "", LIST_F), seen = new Map();
   for(const e of raw){ if(e && e.media && !seen.has(e.mediaId)) seen.set(e.mediaId, { id: e.mediaId, status: e.status, progress: e.progress || 0, repeat: e.repeat || 0, startedAt: e.startedAt, completedAt: e.completedAt, score: e.score || 0, updatedAt: e.updatedAt || 0, m: e.media }); }
@@ -147,6 +161,7 @@ function renderList(opts){
   const more = $("#listMore"); more.hidden = view.length <= shown;
   more.textContent = "Show more (" + shown + " of " + view.length + ")";
   setListNote(L.offline ? "Offline. Showing your saved list" + (L.cachedAt ? " from " + new Date(L.cachedAt).toLocaleString() : "") + "." : "");
+  guardListLayout();
   if(opts && opts.keepScroll) window.scrollTo(0, y);
 }
 function lcard(e, type){

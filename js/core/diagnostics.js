@@ -11,10 +11,16 @@ async function diagReport(){
   };
   let caches_ = "n/a"; try{ caches_ = (await caches.keys()).join(", ") || "none"; }catch(_){}
   const L = typeof lists !== "undefined" ? lists[curType] : null, body = document.querySelector("#listBody");
-  return ["What Next? v2.1.1", "Viewport " + innerWidth + "x" + innerHeight + " @" + (devicePixelRatio || 1) + "x | native: " + (typeof isNative !== "undefined" && isNative ? "yes" : "no"),
+  return ["What Next? v2.1.1 build " + (window.__REV || "unknown"), "Viewport " + innerWidth + "x" + innerHeight + " @" + (devicePixelRatio || 1) + "x | native: " + (typeof isNative !== "undefined" && isNative ? "yes" : "no"),
     "Service worker caches: " + caches_,
     body ? "List body class: \"" + body.className + "\" | cards: " + body.children.length : "List body missing",
     box(body, "List body"), box(body && body.children[0], "First card"),
     L ? "State: type=" + curType + " entries=" + (L.entries ? L.entries.length : "none") + " status=" + L.status + " shown=" + L.shown + " drawn=" + L.drawn + " stale=" + L.stale + " offline=" + L.offline : "",
     "Errors: " + (window.__wnErrors.length ? window.__wnErrors.join(" | ") : "none")].join("\n");
+}
+// Removes the service worker and its caches, then reloads, so the phone fetches every file fresh.
+async function cleanReload(){
+  try{ const rs = await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(r => r.unregister())); }catch(_){}
+  try{ for(const k of await caches.keys()) await caches.delete(k); }catch(_){}
+  location.reload();
 }
