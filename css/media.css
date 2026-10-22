@@ -41,3 +41,16 @@
 .bigscore{font-size:1.6rem;font-weight:800;margin:6px 0}
 .datecell{flex:1}
 .datecell .mini{margin:6px 0 0}
+button.person{background:none;border:0;font:inherit;padding:0;cursor:pointer}
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.mcard{position:relative;border:0;background:none;text-align:left;padding:0;color:var(--ink);font:inherit;cursor:pointer;min-width:0}
+.mcard img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:14px;background:var(--chip);display:block}
+.mcard b{font-size:.8rem;margin-top:6px;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mcard i{font-style:normal;font-size:.72rem;color:var(--muted)}
+.links{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.lk{background:none;border:0;padding:2px 0;font:inherit;font-weight:700;color:var(--sakura);cursor:pointer;text-align:left}
+.stat4{display:grid;grid-template-columns:repeat(4,1fr);text-align:center;margin-top:18px;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stat4 b{display:block;font-size:1.05rem}
+.stat4 span{font-size:.75rem;color:var(--muted)}
+.favbtn{flex:1.6;margin-left:12px;padding:14px 8px;border-radius:16px;border:0;background:var(--grad);color:#fff;font:inherit;font-weight:800;cursor:pointer}
+.favbtn.on{background:none;border:2px solid var(--sakura);color:var(--ink)}

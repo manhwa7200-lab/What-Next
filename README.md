@@ -17,6 +17,7 @@ It's a single `index.html` file with no build step and no dependencies. Host it 
 - **Anime and Manga lists:** your full AniList lists with status tabs, search, a filter sheet (sort, format, status, country, year, length, score, genres include/exclude) and list customisation (grid or list, columns, hide score or progress). Tap a card for quick view with +1 / -1 progress.
 - **Trending:** trending anime and manga carousels on the Pick screen.
 - **Media pages:** tap any title for a full page with score, favourites, genres, synopsis, characters, info, tags with spoiler toggle, where to watch, staff, relations, and recommendations. Relations and recommendations open their own pages.
+- **Character, staff, and studio pages:** tap a character, staff member, studio, or producer on a media page to open its own page, with Set as Favorite, voice actors, series or media, roles, and See more. Tapping a title inside those pages opens it, and the back button walks back through every page.
 - **List editor:** status, progress stepper, score slider, start and finish dates, rewatches, priority, custom lists, notes, private, favourite, and remove. Reaching the last episode completes the entry and sets dates automatically.
 - **Profile:** your avatar and totals, with Stats, Chat, and Settings inside.
 - **Settings:** Discord and secrets, appearance (System, Light, Dark, AMOLED, custom colours), list options, privacy, and account.
@@ -89,7 +90,7 @@ views/
   sheets/           filter sheet, customise sheet, media page and editor containers
 js/
   core/             compat, core and Pick engine, tabs, auth, tracker, theme, start
-  features/         discover, lists, media page, editor, sync, chat, settings, and so on
+  features/         discover, lists, media page, character/staff/studio pages, editor, sync, chat, settings, and so on
 ```
 
 tests/              unit, structure, and screen tests (see below)

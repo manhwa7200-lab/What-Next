@@ -32,6 +32,7 @@ def entry(i, typ):
 N = int(os.environ.get("N", "130"))
 DATA = {"ANIME": [entry(i, "ANIME") for i in range(N)], "MANGA": [entry(i, "MANGA") for i in range(N // 2)]}
 SAVED = []
+FAVS = []; FAVSTATE = {}
 NET = {"off": False, "fail": 0, "delay": 0}
 
 def svg(n):
@@ -70,9 +71,30 @@ def handle(route, request):
             for t in DATA:
                 DATA[t] = [x for x in DATA[t] if x["entryId"] != v["id"]]
             return ok({"DeleteMediaListEntry": {"deleted": True}})
+        if "Media(id:$id)" in q and "page:$p" in q:
+            fld = "characters" if "characters(" in q else "staff"
+            nid = 700 if fld == "characters" else 800
+            return ok({"Media": {fld: {"pageInfo": {"hasNextPage": False}, "edges": [{"role": "SUPPORTING", "node": {"id": nid + k, "siteUrl": "u", "name": {"full": "More %s %d" % (fld, k)}, "image": {"medium": "https://img.test/c5.jpg"}}} for k in range(2)]}}})
+        if "Character(id:$id)" in q:
+            ms = lambda k: {"id": 1000 + k, "type": "ANIME", "format": "TV", "title": {"romaji": "Series %d" % k, "english": None}, "coverImage": {"large": "https://img.test/c%d.jpg" % k}}
+            return ok({"Character": {"id": v["id"], "siteUrl": "https://anilist.co/character/%d" % v["id"], "name": {"full": "Hero One", "native": "ヒーロー"}, "image": {"large": "https://img.test/c3.jpg"}, "description": "A brave hero. ~!Secret twist!~ __Loves__ tea.", "gender": "Female", "age": "17", "bloodType": "A", "dateOfBirth": {"year": None, "month": 4, "day": 9}, "favourites": 15, "isFavourite": FAVSTATE.get(("c", v["id"]), False),
+                "media": {"pageInfo": {"total": 2}, "edges": [{"characterRole": "MAIN", "node": ms(1), "voiceActors": [{"id": 901, "name": {"full": "Actor Jp"}, "image": {"medium": "https://img.test/c6.jpg"}, "languageV2": "Japanese"}, {"id": 902, "name": {"full": "Actor En"}, "image": {"medium": "https://img.test/c7.jpg"}, "languageV2": "English"}]}, {"characterRole": "SUPPORTING", "node": ms(2), "voiceActors": [{"id": 901, "name": {"full": "Actor Jp"}, "image": {"medium": "https://img.test/c6.jpg"}, "languageV2": "Japanese"}]}]}}})
+        if "Staff(id:$id)" in q:
+            ms = lambda k: {"id": 1000 + k, "type": "ANIME", "format": "TV", "title": {"romaji": "Credit %d" % k, "english": None}, "coverImage": {"large": "https://img.test/c%d.jpg" % k}}
+            return ok({"Staff": {"id": v["id"], "siteUrl": "https://anilist.co/staff/%d" % v["id"], "name": {"full": "Actor Jp", "native": "声優"}, "image": {"large": "https://img.test/c6.jpg"}, "description": "A voice actor.", "primaryOccupations": ["Voice Actor"], "languageV2": "Japanese", "homeTown": "Tokyo", "gender": "Female", "age": 30, "yearsActive": [2010], "dateOfBirth": {"year": 1995, "month": 3, "day": 2}, "favourites": 40, "isFavourite": FAVSTATE.get(("s", v["id"]), False),
+                "staffMedia": {"pageInfo": {"total": 2}, "edges": [{"staffRole": "Hero One (Ep 1)", "node": ms(3)}, {"staffRole": "Sidekick", "node": ms(4)}]}, "characters": {"edges": [{"role": "MAIN", "node": {"id": 501, "name": {"full": "Hero One"}, "image": {"medium": "https://img.test/c3.jpg"}}, "media": [{"id": 1001, "title": {"romaji": "Series 1", "english": None}}]}]}}})
+        if "Studio(id:$id" in q:
+            pg = v.get("p", 1); n = 24 if pg == 1 else 6
+            return ok({"Studio": {"id": v["id"], "siteUrl": "https://anilist.co/studio/%d" % v["id"], "name": "Studio One", "favourites": 62, "isFavourite": FAVSTATE.get(("t", v["id"]), False),
+                "media": {"pageInfo": {"hasNextPage": pg == 1}, "edges": [{"node": {"id": 2000 + (pg - 1) * 24 + k, "type": "ANIME", "format": "TV", "title": {"romaji": "Studio Show %d" % ((pg - 1) * 24 + k), "english": None}, "coverImage": {"large": "https://img.test/c%d.jpg" % k}, "seasonYear": 2020 + k % 5}} for k in range(n)]}}})
+        if "ToggleFavourite" in q:
+            key = ("c", v["c"]) if v.get("c") else ("s", v["s"]) if v.get("s") else ("t", v["t"]); FAVS.append(key); FAVSTATE[key] = not FAVSTATE.get(key, False)
+            return ok({"ToggleFavourite": {"studios": {"pageInfo": {"total": 1}}}})
         if "Media(id:$id)" in q:
-            e = next(x for t in DATA.values() for x in t if x["mediaId"] == v["id"]); m = e["media"]
-            return ok({"Media": {**m, "idMal": 1, "synonyms": [], "bannerImage": None, "coverImage": {**m["coverImage"], "color": "#fff"}, "description": "A test show.", "volumes": None, "season": "FALL", "seasonYear": 2026, "endDate": {"year": None, "month": None, "day": None}, "source": "MANGA", "favourites": 5, "isFavourite": False, "rankings": [], "tags": [], "studios": {"nodes": []}, "nextAiringEpisode": None, "trailer": None, "externalLinks": [], "characters": {"edges": []}, "staff": {"edges": []}, "relations": {"edges": []}, "recommendations": {"nodes": []}, "mediaListEntry": {"id": e["entryId"], "status": e["status"], "progress": e["progress"], "score": e["score"], "repeat": e["repeat"], "notes": e["notes"], "private": e["private"], "priority": e["priority"], "startedAt": e["startedAt"], "completedAt": e["completedAt"], "customLists": e["customLists"]}}})
+            e = next((x for t in DATA.values() for x in t if x["mediaId"] == v["id"]), None)
+            if e is None: base = DATA["ANIME"][0]; e = {**base, "mediaId": v["id"], "media": {**base["media"], "id": v["id"], "title": {"romaji": "Other title %d" % v["id"], "english": None}}}
+            m = e["media"]
+            return ok({"Media": {**m, "idMal": 1, "synonyms": [], "bannerImage": None, "coverImage": {**m["coverImage"], "color": "#fff"}, "description": "A test show.", "volumes": None, "season": "FALL", "seasonYear": 2026, "endDate": {"year": None, "month": None, "day": None}, "source": "MANGA", "favourites": 5, "isFavourite": False, "rankings": [], "tags": [], "studios": {"edges": [{"isMain": True, "node": {"id": 77, "name": "Studio One", "isAnimationStudio": True}}, {"isMain": False, "node": {"id": 88, "name": "Producer One", "isAnimationStudio": False}}]}, "meanScore": 61, "nextAiringEpisode": None, "trailer": None, "externalLinks": [], "characters": {"edges": [{"role": "MAIN", "node": {"id": 501, "siteUrl": "https://anilist.co/character/501", "name": {"full": "Hero One"}, "image": {"medium": "https://img.test/c3.jpg"}}}]}, "staff": {"edges": [{"role": "Director", "node": {"id": 601, "siteUrl": "https://anilist.co/staff/601", "name": {"full": "Director One"}, "image": {"medium": "https://img.test/c4.jpg"}}}]}, "relations": {"edges": []}, "recommendations": {"nodes": []}, "mediaListEntry": {"id": e["entryId"], "status": e["status"], "progress": e["progress"], "score": e["score"], "repeat": e["repeat"], "notes": e["notes"], "private": e["private"], "priority": e["priority"], "startedAt": e["startedAt"], "completedAt": e["completedAt"], "customLists": e["customLists"]}}})
         return ok({})
     if "img.test" in url:
         if NET["off"]: return route.abort("internetdisconnected")
@@ -96,6 +118,7 @@ def run(fn, viewport=(390, 844), mobile=True, init="", anon=False):
         page.add_init_script(("" if anon else "if(!localStorage.getItem('wn_token')){localStorage.setItem('wn_token','tok'); localStorage.setItem('wn_name','Tester');}") + init)
         out["ctx"] = ctx
         page.goto("http://127.0.0.1:%d/index.html" % PORT)
+        page.wait_for_selector("#boot", state="detached", timeout=15000)   # the loading screen goes away when the app is ready
         page.wait_for_selector("#setup" if anon else "#tabs:not([hidden])", timeout=15000)
         try:
             fn(page, out)

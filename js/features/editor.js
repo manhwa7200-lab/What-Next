@@ -144,7 +144,7 @@ async function openEditor(m){
     if(!armed){ armed = true; rmv.textContent = "Tap again to remove"; setTimeout(() => { if(!rmv.disabled){ armed = false; rmv.textContent = "Remove"; } }, 3500); return; }
     rmv.disabled = true;
     const r = await trackRemove(m.id, type, e.id);
-    if(r.ok){ box.hidden = true; if(mstack.length) showMedia(mstack[mstack.length - 1]); renderAfter(m.id, type); }
+    if(r.ok){ box.hidden = true; if(mstack.length) showTop(); renderAfter(m.id, type); }
     else{ rmv.disabled = false; armed = false; rmv.textContent = r.offline ? "Can't remove while offline" : "Couldn't remove: " + ((r.error && r.error.message) || "error"); }
   };
 }

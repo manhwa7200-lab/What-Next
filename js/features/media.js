@@ -1,6 +1,6 @@
 /* js/features/media.js: media detail page */
 // ---------- Media pages, list editor, trending ----------
-const MEDIA_Q = "query($id:Int){Media(id:$id){id idMal type siteUrl isAdult title{romaji english native} synonyms bannerImage coverImage{extraLarge color} description(asHtml:false) format status episodes chapters volumes duration season seasonYear startDate{year month day} endDate{year month day} source countryOfOrigin averageScore popularity favourites isFavourite genres rankings{rank type context allTime} tags{name rank isMediaSpoiler isGeneralSpoiler description} studios(isMain:true){nodes{name}} nextAiringEpisode{airingAt episode} trailer{id site} externalLinks{site url type} characters(sort:[ROLE,RELEVANCE],perPage:14){edges{role node{id siteUrl name{full} image{medium}}}} staff(sort:[RELEVANCE],perPage:14){edges{role node{id siteUrl name{full} image{medium}}}} relations{edges{relationType node{id type format title{romaji english} coverImage{large}}}} recommendations(sort:RATING_DESC,perPage:12){nodes{rating mediaRecommendation{id type format title{romaji english} coverImage{large} averageScore seasonYear episodes chapters}}} mediaListEntry{id status progress score(format:POINT_100) repeat notes private priority startedAt{year month day} completedAt{year month day} customLists}}}";
+const MEDIA_Q = "query($id:Int){Media(id:$id){id idMal type siteUrl isAdult title{romaji english native} synonyms bannerImage coverImage{extraLarge color} description(asHtml:false) format status episodes chapters volumes duration season seasonYear startDate{year month day} endDate{year month day} source countryOfOrigin averageScore meanScore popularity favourites isFavourite genres rankings{rank type context allTime} tags{name rank isMediaSpoiler isGeneralSpoiler description} studios{edges{isMain node{id name isAnimationStudio}}} nextAiringEpisode{airingAt episode} trailer{id site} externalLinks{site url type} characters(sort:[ROLE,RELEVANCE],perPage:14){edges{role node{id siteUrl name{full} image{medium}}}} staff(sort:[RELEVANCE],perPage:14){edges{role node{id siteUrl name{full} image{medium}}}} relations{edges{relationType node{id type format title{romaji english} coverImage{large}}}} recommendations(sort:RATING_DESC,perPage:12){nodes{rating mediaRecommendation{id type format title{romaji english} coverImage{large} averageScore seasonYear episodes chapters}}} mediaListEntry{id status progress score(format:POINT_100) repeat notes private priority startedAt{year month day} completedAt{year month day} customLists}}}";
 const TREND_Q = "query($t:MediaType){Page(perPage:12){media(type:$t,sort:TRENDING_DESC,isAdult:false){id type title{romaji english} bannerImage coverImage{extraLarge} averageScore favourites genres description(asHtml:false) studios(isMain:true){nodes{name}} staff(sort:[RELEVANCE],perPage:3){edges{node{name{full}}}}}}}";
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const mcache = new Map(), mstack = [];
@@ -21,7 +21,8 @@ function msec(title, body, action){
 }
 
 function openMedia(id){ if(mstack[mstack.length - 1] !== id) mstack.push(id); showMedia(id); }
-function closeMedia(){ mstack.pop(); if(mstack.length) showMedia(mstack[mstack.length - 1]); else $("#media").hidden = true; }
+function showTop(){ const t = mstack[mstack.length - 1]; if(typeof t === "number") showMedia(t); else showEntity(t); }
+function closeMedia(){ mstack.pop(); if(mstack.length) showTop(); else $("#media").hidden = true; }
 function closeBar(){
   const bar = el("div", "mbar"), x = el("button", "mbtn", "✕"); x.setAttribute("aria-label", "Close"); x.onclick = closeMedia;
   bar.append(x); return bar;
@@ -43,6 +44,22 @@ async function showMedia(id){
   if(mstack[mstack.length - 1] === id) renderMedia(mcache.get(id));
 }
 
+function peopleEdges(edges, kind){
+  return edges.map(x => { const b = el("button", "person"), i = new Image(); i.alt = ""; i.loading = "lazy"; i.src = x.node.image.medium; b.append(i, el("span", null, x.node.name.full), el("i", null, norm(x.role))); b.onclick = () => openEntity(kind, x.node.id); return b; });
+}
+function moreButton(m, field, kind, row){
+  const b = el("button", null, "See more"); let page = 2;
+  b.onclick = async () => {
+    b.disabled = true;
+    try{
+      const sort = field === "characters" ? "ROLE,RELEVANCE" : "RELEVANCE";
+      const { json } = await gql("query($id:Int,$p:Int){Media(id:$id){" + field + "(sort:[" + sort + "],page:$p,perPage:14){pageInfo{hasNextPage} edges{role node{id siteUrl name{full} image{medium}}}}}}", { id: m.id, p: page });
+      const c = json.data.Media[field]; row.append(...peopleEdges(c.edges, kind)); page++;
+      if(c.pageInfo.hasNextPage) b.disabled = false; else b.remove();
+    }catch(_){ b.disabled = false; toast("Couldn't load more. Check your connection."); }
+  };
+  return b;
+}
 function renderMedia(m){
   const box = $("#media"), type = m.type === "ANIME" ? "anime" : "manga", lab = STATUS_LABEL(type), e = m.mediaListEntry;
   const total = type === "anime" ? m.episodes : m.chapters;
@@ -90,16 +107,21 @@ function renderMedia(m){
     box.append(msec("Synopsis", c, t));
   }
   // characters and staff
-  const people = (edges, label) => edges.map(x => { const a = el("a", "person"), i = new Image(); i.alt = ""; i.loading = "lazy"; i.src = x.node.image.medium; a.href = x.node.siteUrl; a.target = "_blank"; a.rel = "noopener"; a.append(i, el("span", null, x.node.name.full), el("i", null, norm(x.role))); return a; });
-  if(m.characters && m.characters.edges.length) box.append(msec("Characters", hrow(people(m.characters.edges))));
+  if(m.characters && m.characters.edges.length){ const row = hrow(peopleEdges(m.characters.edges, "character")); box.append(msec("Characters", row, moreButton(m, "characters", "character", row))); }
   // info
   const rows = [["Romaji", m.title.romaji], ["English", m.title.english], ["Native", m.title.native], ["Synonyms", (m.synonyms || []).join(", ")],
     ["Format", norm(m.format)], [type === "anime" ? "Episodes" : "Chapters", total], type === "anime" ? ["Episode duration", m.duration ? m.duration + " minutes" : ""] : ["Volumes", m.volumes],
     ["Source", norm(m.source)], ["Status", norm(m.status)], ["Start date", fd(m.startDate)], ["End date", fd(m.endDate)],
-    ["Season", m.season ? titleCase(m.season) + " " + (m.seasonYear || "") : ""], ["Studios", ((m.studios && m.studios.nodes) || []).map(s => s.name).join(", ")],
-    ["Country", { JP: "Japan", KR: "South Korea", CN: "China", TW: "Taiwan" }[m.countryOfOrigin] || m.countryOfOrigin], ["Popularity", m.popularity ? m.popularity.toLocaleString() : ""]];
+    ["Season", m.season ? titleCase(m.season) + " " + (m.seasonYear || "") : ""],
+    ["Country", { JP: "Japan", KR: "South Korea", CN: "China", TW: "Taiwan" }[m.countryOfOrigin] || m.countryOfOrigin]];
   const ib = el("div");
   rows.filter(r => r[1]).forEach(r => { const d = el("div", "irow"); d.append(el("span", null, r[0]), el("span", null, String(r[1]))); ib.append(d); });
+  const studios = (m.studios && m.studios.edges) || [];
+  const linkRow = (label, list) => { if(!list.length) return; const d = el("div", "irow"), c = el("div", "links"); list.forEach(x => { const b = el("button", "lk", x.node.name); b.onclick = () => openEntity("studio", x.node.id); c.append(b); }); d.append(el("span", null, label), c); ib.append(d); };
+  linkRow("Studios", studios.filter(x => x.node.isAnimationStudio)); linkRow("Producers", studios.filter(x => !x.node.isAnimationStudio));
+  const sr = el("div", "stat4");
+  [[m.averageScore ? m.averageScore + "%" : "–", "Average"], [m.meanScore ? m.meanScore + "%" : "–", "Mean"], [m.popularity ? m.popularity.toLocaleString() : "–", "Popularity"], [(m.favourites || 0).toLocaleString(), "Favorites"]].forEach(([b, s]) => { const c = el("div"); c.append(el("b", null, b), el("span", null, s)); sr.append(c); });
+  ib.append(sr);
   box.append(msec("Info", ib));
   // tags
   const tags = (m.tags || []).slice(), tb = el("div");
@@ -118,7 +140,7 @@ function renderMedia(m){
     links.forEach(l => { const b = el("button", "rk", l.site); b.style.border = "0"; b.style.cursor = "pointer"; b.style.color = "var(--ink)"; b.onclick = () => openExternal(l.url); w.append(b); });
     box.append(msec(type === "anime" ? "Where to watch" : "Where to read", w));
   }
-  if(m.staff && m.staff.edges.length) box.append(msec("Staff", hrow(people(m.staff.edges))));
+  if(m.staff && m.staff.edges.length){ const row = hrow(peopleEdges(m.staff.edges, "staff")); box.append(msec("Staff", row, moreButton(m, "staff", "staff", row))); }
   // relations
   const rel = (m.relations && m.relations.edges || []).map(r => {
     const b = el("button", "relc"), i = new Image(); i.alt = ""; i.loading = "lazy"; i.src = r.node.coverImage.large;
