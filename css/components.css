@@ -25,7 +25,6 @@ a.link{display:inline-block;margin-top:14px;color:var(--sakura);font-weight:700;
 .msg{padding:14px 16px;border-radius:18px;background:var(--card);box-shadow:var(--shadow)}
 .who{display:flex;align-items:center;gap:8px;color:var(--muted)}
 .pill{padding:6px 12px;border-radius:999px;background:var(--chip);font-size:.8rem;font-weight:700;color:var(--ink);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.who button{background:none;border:0;color:var(--sakura);font:inherit;font-weight:700;font-size:.9rem;cursor:pointer;padding:6px 2px}
 .tabs{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);max-width:456px;margin:0 auto;display:flex;gap:2px;padding:6px;background:var(--glass);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:26px;box-shadow:var(--shadow);z-index:5}
 .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0 7px;border:0;background:none;color:var(--muted);font:700 .62rem Inter,system-ui,sans-serif;border-radius:20px;cursor:pointer;transition:transform .12s}
 .tab svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
@@ -54,7 +53,6 @@ a.link{display:inline-block;margin-top:14px;color:var(--sakura);font-weight:700;
 .bub.them{background:var(--card);box-shadow:var(--shadow);border-bottom-left-radius:6px}
 .chatbox{display:flex;gap:8px;align-items:stretch;margin-top:14px}
 #thread{min-height:30vh;margin-top:10px}
-.who button{white-space:nowrap}
 .pill{max-width:120px}
 .item h3 a{color:var(--ink);text-decoration:none}
 @media (max-width:360px){.chip{padding:12px 10px}}

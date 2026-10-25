@@ -1,8 +1,35 @@
 <section id="profile" hidden>
-    <div class="phead"><img class="avatar" id="profAvatar" alt="" hidden><div><h2 class="ph" id="profName"></h2><p class="sub" id="profStats"></p></div></div>
-    <div class="rowlinks">
+    <div class="pcard">
+      <div class="pbanner" id="profBanner"></div>
+      <img class="pavatar" id="profAvatar" alt="" hidden>
+      <h2 class="ph pname" id="profName"></h2>
+      <a class="pbtn" id="profLink" href="https://anilist.co" target="_blank" rel="noopener">View on AniList ↗</a>
+    </div>
+    <div class="pcounts">
+      <div><b id="pcAnime">–</b><span>Anime</span></div>
+      <div><b id="pcManga">–</b><span>Manga</span></div>
+      <div><b id="pcFollowing">–</b><span>Following</span></div>
+      <div><b id="pcFollowers">–</b><span>Followers</span></div>
+    </div>
+    <div class="rowlinks" style="margin-top:14px">
       <button class="rowlink" data-go="stats"><span>Stats</span><i>›</i></button>
       <button class="rowlink" data-go="chat"><span>Chat</span><i>›</i></button>
       <button class="rowlink" data-go="settings"><span>Settings</span><i>›</i></button>
+    </div>
+    <div class="q">Anime on AniList</div>
+    <div class="card prows" style="margin-top:0">
+      <div class="prow"><span>Episodes watched</span><b id="paEps">–</b></div>
+      <div class="prow"><span>Days watched</span><b id="paDays">–</b></div>
+      <div class="prow"><span>Anime mean score</span><b id="paMean">–</b></div>
+    </div>
+    <div class="q">Manga on AniList</div>
+    <div class="card prows" style="margin-top:0">
+      <div class="prow"><span>Chapters read</span><b id="pmChaps">–</b></div>
+      <div class="prow"><span>Volumes read</span><b id="pmVols">–</b></div>
+      <div class="prow"><span>Manga mean score</span><b id="pmMean">–</b></div>
+    </div>
+    <div id="profBioBox" hidden>
+      <div class="q">Bio</div>
+      <div class="card" style="margin-top:0"><div class="clamp" id="profBio"></div><button class="pmore" id="profBioMore" hidden>More</button></div>
     </div>
   </section>

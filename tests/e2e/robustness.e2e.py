@@ -38,7 +38,7 @@ def t2(page, out):
     cached = page.evaluate("Object.keys(localStorage).filter(k => k.startsWith('wn_list_'))")
     (ok if cached else lambda m: note("BUG", m))("list cached in localStorage: %s" % cached)
     # second visit: cached list should appear instantly even if AniList is slow
-    page.reload(); page.wait_for_selector("#tabs:not([hidden])"); page.evaluate("window.__delay = 2500")
+    page.reload(); page.wait_for_selector("#boot", state="detached"); page.wait_for_selector("#tabs:not([hidden])"); page.evaluate("window.__delay = 2500")   # the logo splash covers the screen for about a second
     t0 = time.time(); page.click('#tabs [data-v="anime"]'); page.wait_for_selector("#listBody .lcard:not(.skel)", timeout=1500); dt = time.time() - t0
     (ok if dt < 1.0 else lambda m: note("BUG", m))("cached list shown immediately on revisit (%.2fs) while the refresh runs" % dt)
     page.wait_for_timeout(3500); page.evaluate("window.__delay = 0")

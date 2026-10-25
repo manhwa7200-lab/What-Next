@@ -101,11 +101,15 @@ if(isNative){
     if(A.getLaunchUrl) A.getLaunchUrl().then(r => r && handleAuthUrl(r.url)).catch(() => {});
   }
 }
-$("#logout2").onclick = () => $("#logout").click();
 $("#appsLink").onclick = () => openExternal("https://anilist.co/settings/apps");
+// Log out lives in Settings > Account. The first tap asks, the second tap logs out.
+let logoutArmed = false;
 $("#logout").onclick = () => {
+  const b = $("#logout");
+  if(!logoutArmed){ logoutArmed = true; b.textContent = "Tap again to log out"; setTimeout(() => { logoutArmed = false; b.textContent = "Log out"; }, 3500); return; }
+  logoutArmed = false; b.textContent = "Log out";
   clearAuth();
   state.items = []; state.user = ""; state.uid = 0; state.skipped.clear(); lists.anime = mkList(); lists.manga = mkList(); clearListCaches(); profLoaded = false;
-  try{ localStorage.removeItem("wn_cache"); localStorage.removeItem("wn_name"); }catch(_){}
+  try{ localStorage.removeItem("wn_cache"); localStorage.removeItem("wn_name"); localStorage.removeItem("wn_profile"); }catch(_){}
   $("#result").replaceChildren(); $("#dlist").replaceChildren();
 };

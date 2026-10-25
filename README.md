@@ -19,8 +19,8 @@ It's a single `index.html` file with no build step and no dependencies. Host it 
 - **Media pages:** tap any title for a full page with score, favourites, genres, synopsis, characters, info, tags with spoiler toggle, where to watch, staff, relations, and recommendations. Relations and recommendations open their own pages.
 - **Character, staff, and studio pages:** tap a character, staff member, studio, or producer on a media page to open its own page, with Set as Favorite, voice actors, series or media, roles, and See more. Tapping a title inside those pages opens it, and the back button walks back through every page.
 - **List editor:** status, progress stepper, score slider, start and finish dates, rewatches, priority, custom lists, notes, private, favourite, and remove. Reaching the last episode completes the entry and sets dates automatically.
-- **Profile:** your avatar and totals, with Stats, Chat, and Settings inside.
-- **Settings:** Discord and secrets, appearance (System, Light, Dark, AMOLED, custom colours), list options, privacy, and account.
+- **Profile:** your AniList banner and avatar (ring uses your AniList profile colour), a View on AniList button, anime, manga, following and followers counts, your anime and manga statistics, and your bio, with Stats, Chat, and Settings inside. The banner and avatar are read from AniList; the AniList API does not let apps change them.
+- **Settings:** Discord and secrets, appearance (System, Light, Dark, AMOLED, custom colours), list options, privacy, and account. **Log out** is in Settings → Account Settings (tap twice to confirm).
 - **Discord sync:** anime and manga updates from your AniList list are posted to Discord forum threads, run from inside the app.
 - **Schedule:** a countdown to the next episode of every airing anime on your list.
 - **Stats:** backlog hours, top genres, titles finished this month, and a daily goal with a streak.
@@ -39,7 +39,7 @@ It's a single `index.html` file with no build step and no dependencies. Host it 
 
 ### 1. Host it
 
-1. Upload `index.html`, `sw.js`, `manifest.webmanifest`, and `icon.svg` to the root of a GitHub repo (the last three enable offline and home-screen install).
+1. Upload `index.html`, `sw.js`, `manifest.webmanifest`, and the `assets/` folder to the root of a GitHub repo (the last three enable offline and home-screen install).
 2. Go to **Settings → Pages**, set the source to **Deploy from a branch**, choose `main` and `/ (root)`, and save.
 3. Wait about a minute, then open your site at `https://<your-username>.github.io/<repo-name>/`.
 
@@ -53,6 +53,10 @@ Put the two Client IDs in `config.js` (`clientWeb` and `clientApp`). Client IDs 
 
 ### 3. Log in
 Tap **Log in with AniList** and approve. In the Android app the browser returns you to the app automatically. Advanced options also let you paste a login token.
+
+## Logo and splash screen
+
+The logo is `assets/logo-512.png` (and smaller copies). It is shown full screen for about a second when the app opens (see `#boot` in `index.html` and `SPLASH_MS` in `boot.js`), in the header, and on the login screen. The Android launcher icon and native splash are generated during the APK build from the pictures in `resources/` (step "Generate app icon and splash screen" in `.github/workflows/build-apk.yml`).
 
 ## Privacy
 
@@ -81,7 +85,8 @@ boot.js             loads the screens and scripts in order
 config.js           AniList client IDs
 sw.js               offline support
 manifest.webmanifest
-assets/             icon
+assets/             logo, app icons and the splash-screen image
+resources/          Android icon and splash sources (used only by the APK build)
 css/                base, components, screens, login, trending, media, utilities
 views/
   shell/            header, tab bar

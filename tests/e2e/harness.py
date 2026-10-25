@@ -52,6 +52,10 @@ def handle(route, request):
             if "status_in" in q: es = [e for e in es if e["status"] in ("CURRENT", "REPEATING", "PLANNING")]
             full = [{**e, "media": {**e["media"]}} for e in es]
             return ok({"MediaListCollection": {"hasNextChunk": False, "lists": [{"entries": full}]}})
+        if "bannerImage" in q and "followers(userId" in q:
+            return ok({"Viewer": {"id": 1, "name": "Tester", "siteUrl": "https://anilist.co/user/Tester", "about": "Just a normal hardcore otaku ~!hidden twist!~ img200(https://img.test/c7.jpg) [my list](https://anilist.co) " + "long bio text " * 30, "bannerImage": "https://img.test/c8.jpg", "avatar": {"large": "https://img.test/c9.jpg"}, "options": {"profileColor": "pink"},
+                "statistics": {"anime": {"count": 464, "episodesWatched": 5100, "minutesWatched": 196000, "meanScore": 80.5}, "manga": {"count": 311, "chaptersRead": 11148, "volumesRead": 473, "meanScore": 94.9612}}},
+                "fo": {"pageInfo": {"total": 7}}, "fe": {"pageInfo": {"total": 3}}})
         if "mediaListOptions" in q: return ok({"Viewer": {"mediaListOptions": {"scoreFormat": NET.get("scorefmt", "POINT_10_DECIMAL"), "animeList": {"customLists": []}, "mangaList": {"customLists": []}}, "options": {"titleLanguage": "ENGLISH"}}})
         if "Viewer{id name}" in q: return ok({"Viewer": {"id": 1, "name": "Tester"}})
         if "TRENDING_DESC" in q: return ok({"Page": {"media": []}})

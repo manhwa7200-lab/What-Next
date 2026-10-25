@@ -18,7 +18,12 @@ body{
 main{max-width:480px;margin:0 auto}
 .top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
 .brand{display:flex;align-items:center;gap:10px}
-.logo{width:40px;height:40px;border-radius:13px;background:var(--grad);color:#fff;display:grid;place-items:center;font-weight:800;font-size:1.3rem}
+.logo{width:40px;height:40px;object-fit:contain;display:block;flex:none}
+#boot{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:#000;transition:opacity .35s ease}
+#boot img{width:min(58vw,260px);height:auto;border-radius:22%;animation:bootIn .7s ease-out both}
+#boot.out{opacity:0;pointer-events:none}
+@keyframes bootIn{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){#boot img{animation:none}#boot{transition:none}}
 h1{font-size:1.35rem;line-height:1.1;margin:0;letter-spacing:-.02em;font-weight:800}
 .sub{color:var(--muted);margin:2px 0 0;font-size:.9rem}
 label,.q{display:block;font-size:.78rem;letter-spacing:.07em;text-transform:uppercase;font-weight:700;color:var(--muted);margin:22px 0 8px}
