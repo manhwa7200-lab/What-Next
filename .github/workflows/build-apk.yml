@@ -24,6 +24,8 @@ jobs:
       - run: npm install
       - run: mkdir -p www && cp -r index.html boot.js sw.js manifest.webmanifest css js views assets www/ && (cp config.js www/ || true)
       - run: npx cap add android
+      - name: Generate app icon and splash screen
+        run: npx --yes @capacitor/assets generate --android --assetPath resources --iconBackgroundColor '#000000' --iconBackgroundColorDark '#000000' --splashBackgroundColor '#000000' --splashBackgroundColorDark '#000000' || echo "Icon generation failed. The build continues with the default icon."
       - name: Add login deep link and version
         run: |
           sed -i 's#</activity>#<intent-filter><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="whatnext"/></intent-filter></activity>#' android/app/src/main/AndroidManifest.xml
