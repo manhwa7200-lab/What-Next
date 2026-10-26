@@ -147,7 +147,7 @@ function renderMedia(m){
     b.append(i, el("span", "relb", norm(r.relationType)), el("b", null, tt(r.node)), el("i", null, norm(r.node.format)));
     b.onclick = () => openMedia(r.node.id); return b;
   });
-  if(rel.length) box.append(msec("Relations", hrow(rel)));
+  if(rel.length){ const mp = el("button", null, "Relation map ›"); mp.onclick = () => openRelMap(m.id); box.append(msec("Relations", hrow(rel), mp)); }
   // recommendations
   const rec = ((m.recommendations && m.recommendations.nodes) || []).filter(n => n.mediaRecommendation).map(n => {
     const r = n.mediaRecommendation, b = el("button", "relc"), i = new Image(); i.alt = ""; i.loading = "lazy"; i.src = r.coverImage.large;

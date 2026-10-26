@@ -2,9 +2,17 @@
   <button class="back" data-go="settings">← Settings</button>
   <h2 class="ph">List Settings</h2>
   <div class="card" style="margin-top:16px">
+    <div class="q" style="margin-top:0">On this device</div>
     <p class="sub">Layout, columns, and what each card shows on your Anime and Manga lists.</p>
     <button class="go alt" id="custOpen">Customise lists</button>
     <button class="go alt" id="resetFilters">Reset list filters</button>
     <p class="sub" id="setListsMsg" style="margin-top:10px"></p>
+  </div>
+  <div class="q">On your AniList account</div>
+  <p class="msg" id="lsStatus">Loading your AniList list settings…</p>
+  <div id="lsForm" hidden></div>
+  <div class="lsbar" id="lsBar" hidden>
+    <p class="sub" id="lsMsg"></p>
+    <button class="go" id="lsSave" disabled>Save Changes</button>
   </div>
 </section>

@@ -33,6 +33,15 @@ N = int(os.environ.get("N", "130"))
 DATA = {"ANIME": [entry(i, "ANIME") for i in range(N)], "MANGA": [entry(i, "MANGA") for i in range(N // 2)]}
 SAVED = []
 FAVS = []; FAVSTATE = {}
+LISTOPT = {"scoreFormat": "POINT_100", "rowOrder": "updatedAt",
+    "animeList": {"sectionOrder": ["Watching", "Rewatching", "Completed", "Planning", "Completed TV", "Completed Movie"], "splitCompletedSectionByFormat": True, "customLists": ["Anime movies", "Iseki", "Milf"], "advancedScoring": ["Story", "Characters", "Visuals"], "advancedScoringEnabled": True},
+    "mangaList": {"sectionOrder": ["Reading", "Hentai", "Completed", "Rereading"], "splitCompletedSectionByFormat": False, "customLists": ["Hentai", "Fav"], "advancedScoring": ["Story", "Characters", "Visuals"], "advancedScoringEnabled": True},
+    "act": {"CURRENT": False, "PLANNING": False, "COMPLETED": False, "DROPPED": False, "PAUSED": False, "REPEATING": True}}
+UPDATES = []
+RMGRAPH = {1001: [("SOURCE", 5000), ("SEQUEL", 5002), ("SIDE_STORY", 5003), ("SIDE_STORY", 5004), ("SPIN_OFF", 5005), ("ALTERNATIVE", 5006), ("PREQUEL", 5010), ("CHARACTER", 5020)],
+    5000: [("ADAPTATION", 1001)], 5002: [("PREQUEL", 1001), ("SEQUEL", 5007)], 5003: [("PARENT", 1001)], 5004: [("PARENT", 1001)], 5005: [("PARENT", 1001)], 5006: [("ALTERNATIVE", 1001)],
+    5007: [("PREQUEL", 5002)], 5010: [("SEQUEL", 1001), ("SIDE_STORY", 5011)], 5011: [("PARENT", 5010)], 5020: [("CHARACTER", 1001), ("CHARACTER", 5021)], 5021: [("CHARACTER", 5020)]}
+RMREQS = []
 NET = {"off": False, "fail": 0, "delay": 0}
 
 def svg(n):
@@ -52,12 +61,53 @@ def handle(route, request):
             if "status_in" in q: es = [e for e in es if e["status"] in ("CURRENT", "REPEATING", "PLANNING")]
             full = [{**e, "media": {**e["media"]}} for e in es]
             return ok({"MediaListCollection": {"hasNextChunk": False, "lists": [{"entries": full}]}})
-        if "bannerImage" in q and "followers(userId" in q:
+        if "followers(userId" in q or "following(userId" in q:
+            if "$id:Int!" not in q.replace(" ", ""):   # AniList rejects a nullable Int where Int! is required
+                return route.fulfill(status=400, content_type="application/json", body=json.dumps({"errors": [{"message": "Variable \"$id\" of type \"Int\" used in position expecting type \"Int!\".", "status": 400}]}))
+            return ok({"fo": {"pageInfo": {"total": 7}}, "fe": {"pageInfo": {"total": 3}}})
+        if "Viewer{" in q and "bannerImage" in q:
+            if NET.get("profileerr"): return route.fulfill(status=500, content_type="application/json", body=json.dumps({"errors": [{"message": "Too Many Requests", "status": 429}], "data": None}))
             return ok({"Viewer": {"id": 1, "name": "Tester", "siteUrl": "https://anilist.co/user/Tester", "about": "Just a normal hardcore otaku ~!hidden twist!~ img200(https://img.test/c7.jpg) [my list](https://anilist.co) " + "long bio text " * 30, "bannerImage": "https://img.test/c8.jpg", "avatar": {"large": "https://img.test/c9.jpg"}, "options": {"profileColor": "pink"},
-                "statistics": {"anime": {"count": 464, "episodesWatched": 5100, "minutesWatched": 196000, "meanScore": 80.5}, "manga": {"count": 311, "chaptersRead": 11148, "volumesRead": 473, "meanScore": 94.9612}}},
-                "fo": {"pageInfo": {"total": 7}}, "fe": {"pageInfo": {"total": 3}}})
+                "statistics": {"anime": {"count": 464, "episodesWatched": 5100, "minutesWatched": 196000, "meanScore": 80.5}, "manga": {"count": 311, "chaptersRead": 11148, "volumesRead": 473, "meanScore": 94.9612}}}})
+        if "genres(limit" in q and "statuses{" in q:
+            def stat(kind):
+                anime = kind == "anime"; total = 806 if anime else 494
+                gen = [("Comedy", 418), ("Fantasy", 357), ("Action", 315), ("Romance", 311), ("Adventure", 252), ("Drama", 196), ("Slice of Life", 174), ("Supernatural", 133), ("Ecchi", 122), ("Sci-Fi", 95), ("Hentai", 62), ("Mystery", 41), ("Psychological", 29), ("Horror", 14), ("Mecha", 13), ("Thriller", 10)]
+                if not anime: gen = [("Hentai", 207), ("Fantasy", 183), ("Comedy", 172), ("Romance", 170), ("Ecchi", 113), ("Adventure", 111), ("Action", 98)]
+                st = [("PLANNING", 341), ("COMPLETED", 314), ("CURRENT", 111), ("PAUSED", 35), ("DROPPED", 5)] if anime else [("PLANNING", 167), ("COMPLETED", 164), ("CURRENT", 160), ("REPEATING", 2), ("DROPPED", 1)]
+                d = {"count": total, "meanScore": 80.5 if anime else 94.96, "minutesWatched": 196000, "episodesWatched": 5100, "chaptersRead": 11148, "volumesRead": 473,
+                     "statuses": [{"status": a, "count": b} for a, b in st], "formats": [{"format": "TV", "count": 600}, {"format": "MOVIE", "count": 90}, {"format": "OVA", "count": 40}, {"format": "TV_SHORT", "count": 6}] if anime else [{"format": "MANGA", "count": 400}, {"format": "ONE_SHOT", "count": 60}, {"format": "NOVEL", "count": 4}],
+                     "scores": [{"score": 60, "count": 5}, {"score": 70, "count": 30}, {"score": 80, "count": 60}, {"score": 90, "count": 25}],
+                     "genres": [{"genre": a, "count": b} for a, b in gen]}
+                if "tags(limit" in q:
+                    d["tags"] = [{"tag": {"name": "Shounen", "category": "Demographic"}, "count": 239 if anime else 73}, {"tag": {"name": "Seinen", "category": "Demographic"}, "count": 118 if anime else 76}, {"tag": {"name": "Shoujo", "category": "Demographic"}, "count": 53 if anime else 6}, {"tag": {"name": "Josei", "category": "Demographic"}, "count": 18 if anime else 1},
+                                 {"tag": {"name": "Male Protagonist", "category": "Cast-Main Cast"}, "count": 300}, {"tag": {"name": "Harem", "category": "Theme-Romance"}, "count": 150}, {"tag": {"name": "Isekai", "category": "Setting-Universe"}, "count": 90}]
+                return d
+            return ok({"Viewer": {"statistics": {"anime": stat("anime"), "manga": stat("manga")}}})
+        if "rowOrder" in q and "mutation" not in q:
+            return ok({"Viewer": {"options": {"disabledListActivity": [{"type": t, "disabled": d} for t, d in LISTOPT["act"].items()]}, "mediaListOptions": {"scoreFormat": LISTOPT["scoreFormat"], "rowOrder": LISTOPT["rowOrder"], "animeList": LISTOPT["animeList"], "mangaList": LISTOPT["mangaList"]}}})
+        if "DeleteCustomList" in q:
+            UPDATES.append({"delete": v}); key = "animeList" if v.get("t") == "ANIME" else "mangaList"
+            LISTOPT[key]["customLists"] = [n for n in LISTOPT[key]["customLists"] if n != v.get("n")]
+            return ok({"DeleteCustomList": {"deleted": True}})
+        if "UpdateUser(" in q and "animeListOptions" in q:
+            UPDATES.append(v)
+            if NET.get("updateerr"): return route.fulfill(status=200, content_type="application/json", body=json.dumps({"errors": [{"message": "Boom"}], "data": None}))
+            LISTOPT["scoreFormat"] = v["sf"]; LISTOPT["rowOrder"] = v["ro"]; LISTOPT["animeList"] = v["al"]; LISTOPT["mangaList"] = v["ml"]
+            for a in v["da"]: LISTOPT["act"][a["type"]] = a["disabled"]
+            return ok({"UpdateUser": {"id": 1}})
+        if "id_in:$ids" in q:
+            RMREQS.append(v["ids"])
+            def rmm(i):
+                st = {1001: "COMPLETED", 5002: "PLANNING"}.get(i)
+                return {"id": i, "type": "MANGA" if i in (5000, 5011) else "ANIME", "format": "MANGA" if i == 5000 else "TV", "status": "FINISHED", "isAdult": False, "title": {"romaji": "Show %d" % i if i != 1001 else "Root Show", "english": None}, "coverImage": {"medium": "https://img.test/c%d.jpg" % (i % 9)},
+                        "averageScore": 70 + i % 20, "seasonYear": 2000 + i % 20, "startDate": {"year": 2000 + i % 20}, "mediaListEntry": {"status": st} if st else None,
+                        "relations": {"edges": [{"relationType": t, "node": {"id": n}} for t, n in RMGRAPH.get(i, [])]}}
+            return ok({"Page": {"media": [rmm(i) for i in v["ids"] if i in RMGRAPH]}})
         if "mediaListOptions" in q: return ok({"Viewer": {"mediaListOptions": {"scoreFormat": NET.get("scorefmt", "POINT_10_DECIMAL"), "animeList": {"customLists": []}, "mangaList": {"customLists": []}}, "options": {"titleLanguage": "ENGLISH"}}})
-        if "Viewer{id name}" in q: return ok({"Viewer": {"id": 1, "name": "Tester"}})
+        if "Viewer{id name}" in q:
+            if NET.get("viewererr"): return route.fulfill(status=500, content_type="application/json", body=json.dumps({"errors": [{"message": "Internal Server Error", "status": 500}], "data": None}))
+            return ok({"Viewer": {"id": 1, "name": "Tester"}})
         if "TRENDING_DESC" in q: return ok({"Page": {"media": []}})
         if "SaveMediaListEntry" in q:
             SAVED.append(v)
@@ -98,7 +148,7 @@ def handle(route, request):
             e = next((x for t in DATA.values() for x in t if x["mediaId"] == v["id"]), None)
             if e is None: base = DATA["ANIME"][0]; e = {**base, "mediaId": v["id"], "media": {**base["media"], "id": v["id"], "title": {"romaji": "Other title %d" % v["id"], "english": None}}}
             m = e["media"]
-            return ok({"Media": {**m, "idMal": 1, "synonyms": [], "bannerImage": None, "coverImage": {**m["coverImage"], "color": "#fff"}, "description": "A test show.", "volumes": None, "season": "FALL", "seasonYear": 2026, "endDate": {"year": None, "month": None, "day": None}, "source": "MANGA", "favourites": 5, "isFavourite": False, "rankings": [], "tags": [], "studios": {"edges": [{"isMain": True, "node": {"id": 77, "name": "Studio One", "isAnimationStudio": True}}, {"isMain": False, "node": {"id": 88, "name": "Producer One", "isAnimationStudio": False}}]}, "meanScore": 61, "nextAiringEpisode": None, "trailer": None, "externalLinks": [], "characters": {"edges": [{"role": "MAIN", "node": {"id": 501, "siteUrl": "https://anilist.co/character/501", "name": {"full": "Hero One"}, "image": {"medium": "https://img.test/c3.jpg"}}}]}, "staff": {"edges": [{"role": "Director", "node": {"id": 601, "siteUrl": "https://anilist.co/staff/601", "name": {"full": "Director One"}, "image": {"medium": "https://img.test/c4.jpg"}}}]}, "relations": {"edges": []}, "recommendations": {"nodes": []}, "mediaListEntry": {"id": e["entryId"], "status": e["status"], "progress": e["progress"], "score": e["score"], "repeat": e["repeat"], "notes": e["notes"], "private": e["private"], "priority": e["priority"], "startedAt": e["startedAt"], "completedAt": e["completedAt"], "customLists": e["customLists"]}}})
+            return ok({"Media": {**m, "idMal": 1, "synonyms": [], "bannerImage": None, "coverImage": {**m["coverImage"], "color": "#fff"}, "description": "A test show.", "volumes": None, "season": "FALL", "seasonYear": 2026, "endDate": {"year": None, "month": None, "day": None}, "source": "MANGA", "favourites": 5, "isFavourite": False, "rankings": [], "tags": [], "studios": {"edges": [{"isMain": True, "node": {"id": 77, "name": "Studio One", "isAnimationStudio": True}}, {"isMain": False, "node": {"id": 88, "name": "Producer One", "isAnimationStudio": False}}]}, "meanScore": 61, "nextAiringEpisode": None, "trailer": None, "externalLinks": [], "characters": {"edges": [{"role": "MAIN", "node": {"id": 501, "siteUrl": "https://anilist.co/character/501", "name": {"full": "Hero One"}, "image": {"medium": "https://img.test/c3.jpg"}}}]}, "staff": {"edges": [{"role": "Director", "node": {"id": 601, "siteUrl": "https://anilist.co/staff/601", "name": {"full": "Director One"}, "image": {"medium": "https://img.test/c4.jpg"}}}]}, "relations": {"edges": [{"relationType": "SEQUEL", "node": {"id": 5002, "type": "ANIME", "format": "TV", "title": {"romaji": "Sequel Show", "english": None}, "coverImage": {"large": "https://img.test/c2.jpg"}}}]}, "recommendations": {"nodes": []}, "mediaListEntry": {"id": e["entryId"], "status": e["status"], "progress": e["progress"], "score": e["score"], "repeat": e["repeat"], "notes": e["notes"], "private": e["private"], "priority": e["priority"], "startedAt": e["startedAt"], "completedAt": e["completedAt"], "customLists": e["customLists"]}}})
         return ok({})
     if "img.test" in url:
         if NET["off"]: return route.abort("internetdisconnected")

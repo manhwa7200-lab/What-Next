@@ -7,10 +7,11 @@ window.addEventListener("online", () => { if(typeof flushPending === "function")
   handleAuthRedirect();
   syncAuthUI();
   if(!auth.token) return;
+  try{ const sn = localStorage.getItem("wn_name"); if(sn) $("#whoName").textContent = sn; }catch(_){}   // show your name while AniList answers
   try{
     const { json } = await gql("query{Viewer{id name}}", {});
     const name = json.data && json.data.Viewer && json.data.Viewer.name;
-    if(!name){ clearAuth(); throw new Error("AniList didn't accept your login. Log in again."); }
+    if(!name) throw new Error((json.errors && json.errors[0] && json.errors[0].message) || "AniList didn't answer. Try again.");   // a real bad token is already handled inside gql()
     state.user = name; state.uid = json.data.Viewer.id;
     try{ localStorage.setItem("wn_name", name); }catch(_){}
     loadList(name);

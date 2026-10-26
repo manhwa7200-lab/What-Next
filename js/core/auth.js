@@ -93,6 +93,7 @@ if(isNative){
       else if(!$("#fsheet").hidden) $("#fsheet").hidden = true;
       else if(!$("#csheet").hidden) $("#csheet").hidden = true;
       else if(!$("#media").hidden) closeMedia();
+      else if(!$("#relmap").hidden) closeRelMap();
       else if(SUBS.some(id => !$(id).hidden)) showTab("settings");
       else if(!$("#settings").hidden || !$("#stats").hidden || !$("#chat").hidden) showTab("profile");
       else if($("#pickWrap").hidden) showTab("pick");

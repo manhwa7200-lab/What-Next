@@ -1,0 +1,30 @@
+/* css/listset.css: Settings > List Settings (AniList list options) */
+.lssec{margin-top:26px}
+.lsh{margin:0 0 6px;font-size:1.05rem}
+.lshead{display:flex;flex-wrap:wrap;align-items:center;column-gap:16px;row-gap:2px;margin:22px 0 10px}
+.lshead h3{margin:0;flex:1 1 auto;font-size:1.05rem}
+.lslink{background:none;border:0;color:var(--sakura);font:inherit;font-weight:700;font-size:.9rem;padding:4px 0;cursor:pointer;white-space:nowrap}
+.lsrow{position:relative;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 0;min-height:52px;margin:0;cursor:pointer;font-size:1rem;font-weight:500;letter-spacing:0;text-transform:none;color:var(--ink)}
+.lsrow>span{flex:1;min-width:0}
+.lssel{width:auto;max-width:55%;padding:8px 12px;border-radius:12px;font-weight:700}
+.lssw{position:absolute;opacity:0;pointer-events:none}
+.lsck{width:28px;height:28px;border-radius:50%;border:2px solid var(--sakura);flex:none;display:grid;place-items:center;transition:background .15s}
+.lssw:checked+.lsck{background:var(--sakura)}
+.lssw:checked+.lsck::after{content:"✓";color:var(--sakura-ink);font-weight:800;font-size:.95rem;line-height:1}
+.lssw:focus-visible+.lsck{outline:3px solid var(--sakura);outline-offset:2px}
+.lschips{display:flex;flex-wrap:wrap;gap:10px}
+.lschip{display:inline-flex;align-items:center;gap:8px;padding:7px 8px 7px 14px;border:1.5px solid var(--sakura);border-radius:12px;font-weight:600;max-width:100%}
+.lschip button{background:none;border:0;color:var(--sakura);font:inherit;font-weight:800;padding:0 4px;cursor:pointer}
+.lschip.gone{opacity:.65;border-style:dashed}
+.lschip.gone>span{text-decoration:line-through}
+.lsadd{display:flex;gap:8px;align-items:center;margin-top:12px}
+.lsadd input{flex:1;min-width:0;padding:10px 14px}
+.lsadd .mini{margin:0}
+.lsord{display:flex;align-items:center;gap:8px;padding:14px 16px;margin-top:10px;background:var(--card);border-radius:14px;box-shadow:var(--shadow)}
+.lsord>span{flex:1;min-width:0}
+.lsord button{width:38px;height:34px;border:0;border-radius:10px;background:var(--chip);color:var(--ink);font:inherit;cursor:pointer}
+.lsord button:disabled{opacity:.3}
+.warn2{color:var(--sakura);margin-top:10px}
+.lsbar{position:sticky;bottom:calc(env(safe-area-inset-bottom,0px) + 92px);margin-top:26px;padding:10px 0 4px;background:linear-gradient(to bottom,transparent,var(--bg) 22%)}
+.lsbar .sub{margin:0 0 6px;min-height:1.2em;text-align:center}
+.lsbar .go{margin:0}

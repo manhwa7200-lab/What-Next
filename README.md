@@ -23,7 +23,9 @@ It's a single `index.html` file with no build step and no dependencies. Host it 
 - **Settings:** Discord and secrets, appearance (System, Light, Dark, AMOLED, custom colours), list options, privacy, and account. **Log out** is in Settings → Account Settings (tap twice to confirm).
 - **Discord sync:** anime and manga updates from your AniList list are posted to Discord forum threads, run from inside the app.
 - **Schedule:** a countdown to the next episode of every airing anime on your list.
-- **Stats:** backlog hours, top genres, titles finished this month, and a daily goal with a streak.
+- **Stats:** two tabs. **Overview** shows your AniList statistics with anime and manga side by side (totals, genres, status, demographics, formats, tags, score spread). **Progress** keeps backlog hours, titles finished this month, and the daily goal with a streak.
+- **List Settings:** the same options as AniList's list settings page, saved to your account with Save Changes: scoring system and advanced scoring, default list order, split Completed by format, which list activity to stop creating, custom anime and manga lists (add or remove), and the section order (Start Reorder uses the up and down buttons). Removing a custom list also removes it from every title that uses it.
+- **Relation map:** on a title's page, Relations > Relation map draws the whole franchise as a graph (source above, prequels above, sequels and side stories below). Toggle Core, Related, and Character links, zoom with the buttons or two fingers, tap a label or use Branches to fold a branch, switch to List view, and add titles to Planning straight from the map. Big franchises stop at about 90 titles (140 with Character links).
 - **Offline:** installs to your home screen and shows your last saved list when you have no connection.
 - **Chat:** one-to-one private messages with other AniList users, using AniList's own message system.
 - **Login required:** you must log in with your AniList account. There is no guest mode.

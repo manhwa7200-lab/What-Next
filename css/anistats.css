@@ -1,0 +1,22 @@
+/* css/anistats.css: Stats > Overview (anime and manga side by side) */
+.asrow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;align-items:start}
+.asttl{margin:6px 0 0;text-align:center;font-size:1.15rem}
+.asum{background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:6px 12px;min-width:0}
+.asum div{padding:10px 0;border-bottom:1px solid var(--line);text-align:center}
+.asum div:last-child{border-bottom:0}
+.asum b{display:block;font-size:1.3rem;letter-spacing:-.02em}
+.asum span{font-size:.75rem;color:var(--muted)}
+.asbox{min-width:0}
+.asbox h4{margin:8px 0 12px;text-align:center;font-size:.95rem;font-weight:600;color:var(--muted)}
+.asg{margin-bottom:12px}
+.asgl{display:flex;justify-content:space-between;gap:6px;font-size:.78rem;line-height:1.2}
+.asgl span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.asgl em{font-style:normal;color:var(--muted);flex:none}
+.asgb{height:6px;border-radius:3px;background:var(--chip);margin-top:6px;overflow:hidden}
+.asgb i{display:block;height:100%;border-radius:3px}
+.asdonut{display:block;width:min(100%,150px);margin:0 auto 12px}
+.asleg{display:flex;flex-direction:column;gap:7px}
+.asli{display:flex;align-items:center;gap:6px;font-size:.78rem;line-height:1.2}
+.asli i{width:8px;height:8px;border-radius:50%;flex:none}
+.asli span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.asli em{font-style:normal;color:var(--muted);flex:none}

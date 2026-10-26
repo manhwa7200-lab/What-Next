@@ -1,0 +1,47 @@
+/* css/relmap.css: Relation map overlay */
+#relmap{z-index:22;display:flex;flex-direction:column;overflow:hidden;padding-bottom:0}
+.rmtop{display:flex;align-items:center;gap:10px}
+.rmtitle{flex:1;min-width:0}
+.rmtitle h2{margin:0;font-size:1.35rem}
+.rmtitle .sub{margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rmicon{min-width:44px;height:44px;border:0;border-radius:14px;background:var(--chip);color:var(--ink);font:inherit;font-size:1.3rem;font-weight:700;cursor:pointer}
+.rmctlbtn{align-self:flex-end;background:none;border:0;color:var(--muted);font:inherit;font-weight:600;padding:10px 0 6px;cursor:pointer}
+#rmCtl .row{flex-wrap:nowrap;overflow-x:auto;gap:8px;scrollbar-width:none}
+#rmCtl .row .chip{flex:0 0 auto;min-width:0;padding:9px 13px;font-size:.88rem}
+.rmlegend{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:14px;margin:10px 0 0;font-size:.78rem;color:var(--muted);white-space:nowrap;scrollbar-width:none}
+.rmleg{display:inline-flex;align-items:center;gap:6px;flex:none}
+.rmleg i{width:14px;height:3px;border-radius:2px;display:block}
+#rmStatus{margin:10px 0 8px}
+.rmview{flex:1;min-height:0;overflow:auto;touch-action:pan-x pan-y;border-radius:18px;background:var(--card);box-shadow:var(--shadow);-webkit-overflow-scrolling:touch}
+#rmSizer{position:relative}
+#rmInner{position:absolute;left:0;top:0;transform-origin:0 0}
+#rmSvg{position:absolute;left:0;top:0;pointer-events:none}
+.rmnode{position:absolute;width:150px;height:112px;box-sizing:border-box;padding:8px;border-radius:12px;background:var(--bg);border:1.5px solid var(--line);display:flex;flex-direction:column;gap:5px;cursor:pointer;overflow:hidden}
+.rmnode.root{border-color:#7fd36f;box-shadow:0 0 0 2px rgba(127,211,111,.25)}
+.rmtop2{display:flex;gap:8px;align-items:flex-start}
+.rmtop2 img{width:34px;height:48px;object-fit:cover;border-radius:6px;background:var(--chip);flex:none}
+.rmmeta{display:flex;flex-direction:column;gap:2px;font-size:.66rem;color:var(--muted);min-width:0}
+.rmmeta b{color:#f1c95a;font-weight:700}
+.rmttl{font-size:.72rem;font-weight:700;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rmfoot{margin-top:auto;border-top:1px solid var(--line);padding-top:4px;font-size:.68rem}
+.rmst{font-weight:700}
+.rmst.done{color:#7fd36f}
+.rmst.on{color:#6fb4f5}
+.rmadd{background:none;border:0;padding:0;color:var(--sakura);font:inherit;font-weight:700;cursor:pointer}
+.rmlabel{position:absolute;transform:translate(-50%,-50%);padding:3px 10px;border-radius:9px;border:1.5px solid;background:var(--card);font:inherit;font-size:.7rem;font-weight:700;white-space:nowrap;cursor:pointer}
+.rmbar{display:flex;align-items:center;gap:8px;padding:10px 0 calc(env(safe-area-inset-bottom,0px) + 10px);border-top:1px solid var(--line);margin-top:10px}
+.rmbar #rmZoom{min-width:48px;text-align:center;font-weight:700}
+.rmbranch{margin-left:auto;background:none;border:0;color:var(--ink);font:inherit;font-weight:800;font-size:1.05rem;padding:10px 6px;cursor:pointer}
+.rmlistview{flex:1;min-height:0;overflow:auto;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 24px)}
+.rmrow{display:flex;gap:12px;margin-top:10px;padding:10px;background:var(--card);border-radius:16px;box-shadow:var(--shadow);cursor:pointer}
+.rmrow img{width:52px;height:74px;object-fit:cover;border-radius:10px;background:var(--chip);flex:none}
+.rmrinfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.rmrinfo b{line-height:1.2}
+.rmrinfo>span{font-size:.8rem;color:var(--muted)}
+.rmrinfo .rmfoot{margin-top:4px;border-top:0;padding-top:0;font-size:.8rem}
+.rmsheet{position:absolute;inset:0;z-index:5;background:rgba(0,0,0,.55);display:flex;align-items:flex-end}
+.rmsheetbox{width:100%;max-height:78%;overflow:auto;background:var(--bg);border-radius:24px 24px 0 0;padding:20px 18px calc(env(safe-area-inset-bottom,0px) + 18px)}
+.rmsheetbox h3{margin:0 0 4px}
+.rmbrow{position:relative;display:flex;align-items:center;gap:12px;justify-content:space-between;padding:12px 0;margin:0;border-bottom:1px solid var(--line);font-size:1rem;font-weight:500;letter-spacing:0;text-transform:none;color:var(--ink);cursor:pointer}
+.rmbrow span{min-width:0;display:flex;flex-direction:column}
+.rmbrow small{color:var(--muted);font-weight:500}

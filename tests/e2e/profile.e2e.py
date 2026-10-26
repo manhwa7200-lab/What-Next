@@ -8,7 +8,11 @@ def main(page, out):
     check("splash is removed after loading", page.locator("#boot").count() == 0)
     check("header shows the logo image", page.evaluate("(() => { const i = document.querySelector('.brand img.logo'); return !!i && i.naturalWidth > 0; })()"))
     check("no Log out button in the header", page.locator("#whoBar button").count() == 0 and page.locator("header #logout").count() == 0)
-    page.click('#tabs [data-v="profile"]'); page.wait_for_function("document.querySelector('#pcFollowers').textContent !== '–'")
+    # a failing AniList request shows a message and can be retried
+    NET["profileerr"] = True; page.click('#tabs [data-v="profile"]'); page.wait_for_selector("#profErr:not([hidden])")
+    check("profile error is shown, not blank", "Too Many Requests" in page.inner_text("#profErr"), page.inner_text("#profErr"))
+    NET["profileerr"] = False; page.click("#profErr")
+    page.wait_for_function("document.querySelector('#pcFollowers').textContent !== '–'")
     t = lambda sel: page.inner_text(sel).strip()
     check("name shown", t("#profName") == "Tester", t("#profName"))
     check("banner image set", "c8.jpg" in page.evaluate("document.querySelector('#profBanner').style.backgroundImage"))
@@ -30,6 +34,6 @@ def main(page, out):
     check("second tap logs out", page.evaluate("!localStorage.getItem('wn_token')") and page.evaluate("!document.querySelector('#setup').hidden"))
     check("saved profile cleared on log out", page.evaluate("localStorage.getItem('wn_profile')") is None)
 out = run(main, viewport=(390, 844))
-real = [c for c in out["console"] if "ERR_INTERNET" not in c[1]]
+real = [c for c in out["console"] if "ERR_INTERNET" not in c[1] and "status of 500" not in c[1]]   # the 500 is the error we trigger on purpose
 check("no console errors", not real and not out["errors"], (real[:2], out["errors"][:2]))
 print("%d checks, %d failed" % (len(R), R.count(False))); sys.exit(1 if False in R else 0)

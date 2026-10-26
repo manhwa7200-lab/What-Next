@@ -1,0 +1,30 @@
+<div class="sheet" id="relmap" hidden>
+  <div class="rmtop">
+    <button class="rmicon" id="rmBack" aria-label="Back">←</button>
+    <div class="rmtitle"><h2 id="rmTitle">Relation map</h2><p class="sub" id="rmSub"></p></div>
+    <button class="rmicon" id="rmRefresh" aria-label="Reload the map">⟳</button>
+  </div>
+  <button class="rmctlbtn" id="rmCtlBtn" aria-expanded="true">Map controls ▴</button>
+  <div id="rmCtl">
+    <div class="row">
+      <button class="chip" id="rmCore" aria-pressed="true">✓ Core</button>
+      <button class="chip" id="rmRel" aria-pressed="true">✓ Related</button>
+      <button class="chip" id="rmChar" aria-pressed="false">Character</button>
+      <button class="chip" id="rmList" aria-pressed="false">List view</button>
+    </div>
+    <div class="rmlegend" id="rmLegend"></div>
+  </div>
+  <p class="sub" id="rmStatus"></p>
+  <div class="rmview" id="rmView"><div id="rmSizer"><div id="rmInner"><svg id="rmSvg" aria-hidden="true"></svg></div></div></div>
+  <div class="rmlistview" id="rmListView" hidden></div>
+  <div class="rmbar" id="rmBar">
+    <button class="rmicon" id="rmMinus" aria-label="Zoom out">−</button>
+    <span id="rmZoom">100%</span>
+    <button class="rmicon" id="rmPlus" aria-label="Zoom in">+</button>
+    <button class="rmicon" id="rmFit" aria-label="Fit the whole map">◎</button>
+    <button class="rmbranch" id="rmBranches">Branches</button>
+  </div>
+  <div class="rmsheet" id="rmBranchSheet" hidden>
+    <div class="rmsheetbox"><h3>Branches</h3><p class="sub">Fold a branch to hide the titles under it. Tap a label on the map to do the same.</p><div id="rmBranchList"></div><button class="go alt" id="rmBranchDone">Done</button></div>
+  </div>
+</div>

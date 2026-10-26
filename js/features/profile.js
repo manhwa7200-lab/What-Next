@@ -37,21 +37,34 @@ function paintProfile(d){
 }
 $("#profBioMore").onclick = () => { const c = $("#profBio"); c.classList.toggle("open"); $("#profBioMore").textContent = c.classList.contains("open") ? "Less" : "More"; };
 
-const PROFILE_Q = "query($id:Int){Viewer{id name siteUrl about(asHtml:false) bannerImage avatar{large} options{profileColor} statistics{anime{count episodesWatched minutesWatched meanScore} manga{count chaptersRead volumesRead meanScore}}} fo:Page(perPage:1){pageInfo{total} following(userId:$id){id}} fe:Page(perPage:1){pageInfo{total} followers(userId:$id){id}}}";
+// Two small requests: the profile itself, then the follower counts. AniList requires the user id as Int! for followers/following.
+const PROFILE_Q = "query{Viewer{id name siteUrl about(asHtml:false) bannerImage avatar{large} options{profileColor} statistics{anime{count episodesWatched minutesWatched meanScore} manga{count chaptersRead volumesRead meanScore}}}}";
+const FOLLOW_Q = "query($id:Int!){fo:Page(perPage:1){pageInfo{total} following(userId:$id){id}} fe:Page(perPage:1){pageInfo{total} followers(userId:$id){id}}}";
+const savedName = () => { try{ return localStorage.getItem("wn_name") || ""; }catch(_){ return ""; } };
+$("#profErr").onclick = () => { profLoaded = false; renderProfile(); };
 
 async function renderProfile(){
-  $("#profName").textContent = state.user || "";
+  $("#profName").textContent = state.user || savedName();
   if(profLoaded) return;
   let cached = null;
   try{ cached = JSON.parse(localStorage.getItem(PROFILE_KEY) || "null"); }catch(_){}
-  if(cached && cached.v && String(cached.v.name || "").toLowerCase() === String(state.user || "").toLowerCase()) paintProfile(cached);   // show the saved copy right away
+  const mine = cached && cached.v && String(cached.v.name || "").toLowerCase() === String(state.user || savedName()).toLowerCase();
+  if(mine) paintProfile(cached);   // show the saved copy right away
+  $("#profErr").hidden = true;
   try{
-    const id = await myId();
-    const { json } = await gql(PROFILE_Q, { id });
-    const v = json.data && json.data.Viewer; if(!v) return;
-    const d = { v, following: json.data.fo && json.data.fo.pageInfo ? json.data.fo.pageInfo.total : null, followers: json.data.fe && json.data.fe.pageInfo ? json.data.fe.pageInfo.total : null };
+    const { json } = await gql(PROFILE_Q, {});
+    const v = json.data && json.data.Viewer;
+    if(!v) throw new Error((json.errors && json.errors[0] && json.errors[0].message) || "No data");
+    const d = { v, following: mine ? cached.following : null, followers: mine ? cached.followers : null };
     paintProfile(d); profLoaded = true;
     try{ localStorage.setItem(PROFILE_KEY, JSON.stringify(d)); }catch(_){}
-  }catch(_){}
+    try{
+      const r2 = await gql(FOLLOW_Q, { id: v.id }), j = r2.json.data;
+      if(j){ d.following = j.fo && j.fo.pageInfo ? j.fo.pageInfo.total : d.following; d.followers = j.fe && j.fe.pageInfo ? j.fe.pageInfo.total : d.followers; paintProfile(d); try{ localStorage.setItem(PROFILE_KEY, JSON.stringify(d)); }catch(_){} }
+    }catch(_){}   // follower counts are optional
+  }catch(err){
+    const msg = /Failed to fetch|NetworkError|Load failed/i.test(err.message) ? "no connection" : err.message;
+    $("#profErr").textContent = "Couldn't load your profile (" + msg + "). Tap to try again."; $("#profErr").hidden = false;
+  }
 }
 document.querySelectorAll("[data-go]").forEach(b => { b.onclick = () => showTab(b.dataset.go); });
