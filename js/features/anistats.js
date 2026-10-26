@@ -2,7 +2,8 @@
 // ---------- AniList statistics (Overview) ----------
 const AS_FIELDS = "count meanScore minutesWatched episodesWatched chaptersRead volumesRead statuses{status count} formats{format count} scores{score count} genres(limit:60,sort:COUNT_DESC){genre count}";
 const AS_TAGS = " tags(limit:500,sort:COUNT_DESC){tag{name category} count}";
-const asQuery = tags => "query{Viewer{statistics{anime{" + AS_FIELDS + (tags ? AS_TAGS : "") + "} manga{" + AS_FIELDS + (tags ? AS_TAGS : "") + "}}}}";
+const asBody = tags => "statistics{anime{" + AS_FIELDS + (tags ? AS_TAGS : "") + "} manga{" + AS_FIELDS + (tags ? AS_TAGS : "") + "}}";
+const asQuery = (tags, uid) => uid ? "query($id:Int!){User(id:$id){" + asBody(tags) + "}}" : "query{Viewer{" + asBody(tags) + "}}";
 const AS_GENRE_COLORS = { Action: "#f29a9b", Adventure: "#f1c95a", Comedy: "#a5e46d", Drama: "#c59cf2", Ecchi: "#f47cb7", Fantasy: "#93a3f7", Hentai: "#e98bd7", Horror: "#ea866e", "Mahou Shoujo": "#e6a6f3", Mecha: "#76c9c3", Music: "#82d3f2", Mystery: "#a99ef2", Psychological: "#dca9e3", Romance: "#f6a5a5", "Sci-Fi": "#6fc6f6", "Slice of Life": "#cbdb6e", Sports: "#f2ab6e", Supernatural: "#72d3a6", Thriller: "#db8d8d" };
 const AS_PALETTE = ["#c3f26b", "#b0bcff", "#f1d98a", "#e8a8d0", "#eaa994", "#8fd8d0", "#c9a6f0", "#f2b36f"];
 const AS_STATUS = { CURRENT: ["Watching", "Reading"], REPEATING: ["Rewatching", "Rereading"], PLANNING: ["Planning", "Planning"], COMPLETED: ["Completed", "Completed"], PAUSED: ["Paused", "Paused"], DROPPED: ["Dropped", "Dropped"] };
@@ -11,16 +12,19 @@ const asNiceFormat = f => String(f || "").split("_").map(w => w[0] + w.slice(1).
 const asGenreColor = g => { if(AS_GENRE_COLORS[g]) return AS_GENRE_COLORS[g]; let h = 0; for(const c of g) h = (h * 31 + c.charCodeAt(0)) % 360; return "hsl(" + h + " 70% 72%)"; };
 const asPct = (n, total) => total ? (Math.round(n / total * 1000) / 10).toFixed(1) + "%" : "0.0%";
 
-let asData = null, asAt = 0, asBusy = false, statsSeg = "overview";
+const asCache = new Map();   // "me" or a user id -> { st, at }
+let asBusy = false, statsSeg = "overview";
 
-async function loadAniStats(force){
-  if(asData && !force && Date.now() - asAt < 600000) return asData;
-  let json;
-  ({ json } = await gql(asQuery(true), {}));
-  if(!(json.data && json.data.Viewer)) ({ json } = await gql(asQuery(false), {}));   // retry without tags if AniList refuses the big request
-  const st = json.data && json.data.Viewer && json.data.Viewer.statistics;
+async function loadAniStats(force, uid){
+  const key = uid || "me", hit = asCache.get(key);
+  if(hit && !force && Date.now() - hit.at < 600000) return hit.st;
+  const ask = tags => gql(asQuery(tags, uid), uid ? { id: uid } : {});
+  let { json } = await ask(true);
+  const pick = j => j.data && (uid ? j.data.User : j.data.Viewer);
+  if(!pick(json)) ({ json } = await ask(false));   // retry without tags if AniList refuses the big request
+  const root = pick(json), st = root && root.statistics;
   if(!st) throw new Error((json.errors && json.errors[0] && json.errors[0].message) || "No data");
-  asData = st; asAt = Date.now(); return st;
+  asCache.set(key, { st, at: Date.now() }); return st;
 }
 
 // ----- small drawing helpers -----
@@ -73,31 +77,35 @@ function asSections(st){
   return [side("anime"), side("manga")];
 }
 
+function drawAniStats(box, st, onRefresh){
+  const S = asSections(st);
+  box.replaceChildren();
+  const head = el("div", "asrow"); head.append(el("h3", "asttl", "Anime"), el("h3", "asttl", "Manga")); box.append(head);
+  const sums = el("div", "asrow");
+  for(const s of S){ const c = el("div", "asum"); for(const [big, small] of s.summary){ const r = el("div"); r.append(el("b", null, big), el("span", null, small)); c.append(r); } sums.append(c); }
+  box.append(sums);
+  const section = (title, key, kind, minRows) => {
+    if(!S.some(s => s[key] && s[key].length >= (minRows || 1))) return;
+    const row = el("div", "asrow");
+    for(const s of S){
+      const cell = el("div", "asbox"); cell.append(el("h4", null, title));
+      if(s[key] && s[key].length >= (minRows || 1)) (kind === "bars" ? asBars : asDonut)(s[key], s.total || 1, cell);
+      else cell.append(el("p", "sub", "Nothing to show"));
+      row.append(cell);
+    }
+    box.append(row);
+  };
+  section("Genres", "genres", "bars"); section("Status", "status", "donut"); section("Demographics", "demo", "donut"); section("Formats", "formats", "donut");
+  section("Tags", "tags", "bars"); section("Scores", "scores", "bars");
+  if(onRefresh){ const f = el("button", "mini", "Refresh"); f.onclick = onRefresh; box.append(f); }
+}
+
 async function renderAniStats(force){
   const box = $("#anistatsBody"); if(asBusy) return;
-  if(!asData) box.replaceChildren(el("div", "msg", "Loading your AniList statistics…"));
+  if(!asCache.get("me")) box.replaceChildren(el("div", "msg", "Loading your AniList statistics…"));
   asBusy = true;
   try{
-    const st = await loadAniStats(force), S = asSections(st);
-    box.replaceChildren();
-    const head = el("div", "asrow"); head.append(el("h3", "asttl", "Anime"), el("h3", "asttl", "Manga")); box.append(head);
-    const sums = el("div", "asrow");
-    for(const s of S){ const c = el("div", "asum"); for(const [big, small] of s.summary){ const r = el("div"); r.append(el("b", null, big), el("span", null, small)); c.append(r); } sums.append(c); }
-    box.append(sums);
-    const section = (title, key, kind, minRows) => {
-      if(!S.some(s => s[key] && s[key].length >= (minRows || 1))) return;
-      const row = el("div", "asrow");
-      for(const s of S){
-        const cell = el("div", "asbox"); cell.append(el("h4", null, title));
-        if(s[key] && s[key].length >= (minRows || 1)) (kind === "bars" ? asBars : asDonut)(s[key], s.total || 1, cell);
-        else cell.append(el("p", "sub", "Nothing to show"));
-        row.append(cell);
-      }
-      box.append(row);
-    };
-    section("Genres", "genres", "bars"); section("Status", "status", "donut"); section("Demographics", "demo", "donut"); section("Formats", "formats", "donut");
-    section("Tags", "tags", "bars"); section("Scores", "scores", "bars");
-    const f = el("button", "mini", "Refresh"); f.onclick = () => { renderAniStats(true); }; box.append(f);
+    drawAniStats(box, await loadAniStats(force), () => { renderAniStats(true); });
   }catch(err){
     const m = el("div", "msg state"); m.append(el("b", null, "Couldn't load your statistics"), el("span", null, /Failed to fetch|NetworkError|Load failed/i.test(err.message) ? "No connection." : err.message));
     const b = el("button", "go alt", "Try again"); b.onclick = () => renderAniStats(true); m.append(b); box.replaceChildren(m);

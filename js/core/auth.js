@@ -92,6 +92,7 @@ if(isNative){
       else if(!$("#qv").hidden) $("#qv").hidden = true;
       else if(!$("#fsheet").hidden) $("#fsheet").hidden = true;
       else if(!$("#csheet").hidden) $("#csheet").hidden = true;
+      else if(!$("#user").hidden) userPop();
       else if(!$("#media").hidden) closeMedia();
       else if(!$("#relmap").hidden) closeRelMap();
       else if(SUBS.some(id => !$(id).hidden)) showTab("settings");
@@ -113,4 +114,5 @@ $("#logout").onclick = () => {
   state.items = []; state.user = ""; state.uid = 0; state.skipped.clear(); lists.anime = mkList(); lists.manga = mkList(); clearListCaches(); profLoaded = false;
   try{ localStorage.removeItem("wn_cache"); localStorage.removeItem("wn_name"); localStorage.removeItem("wn_profile"); }catch(_){}
   $("#result").replaceChildren(); $("#dlist").replaceChildren();
+  try{ userCloseAll(); affCache.clear(); asCache.clear(); profMe = null; }catch(_){}
 };

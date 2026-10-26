@@ -19,6 +19,7 @@ It's a single `index.html` file with no build step and no dependencies. Host it 
 - **Media pages:** tap any title for a full page with score, favourites, genres, synopsis, characters, info, tags with spoiler toggle, where to watch, staff, relations, and recommendations. Relations and recommendations open their own pages.
 - **Character, staff, and studio pages:** tap a character, staff member, studio, or producer on a media page to open its own page, with Set as Favorite, voice actors, series or media, roles, and See more. Tapping a title inside those pages opens it, and the back button walks back through every page.
 - **List editor:** status, progress stepper, score slider, start and finish dates, rewatches, priority, custom lists, notes, private, favourite, and remove. Reaching the last episode completes the entry and sets dates automatically.
+- **People:** on your Profile, tap Following or Followers for the list (a Mutual badge marks people who follow you back; the three-dot menu can follow, unfollow, or open AniList). Tap anyone to open their profile: banner, avatar, counts, an affinity score from the scores you both gave to the same titles (needs 5 or more shared scores), their statistics, View Detail Statistics with the same charts as yours, Follow, and Message.
 - **Profile:** your AniList banner and avatar (ring uses your AniList profile colour), a View on AniList button, anime, manga, following and followers counts, your anime and manga statistics, and your bio, with Stats, Chat, and Settings inside. The banner and avatar are read from AniList; the AniList API does not let apps change them.
 - **Settings:** Discord and secrets, appearance (System, Light, Dark, AMOLED, custom colours), list options, privacy, and account. **Log out** is in Settings → Account Settings (tap twice to confirm).
 - **Discord sync:** anime and manga updates from your AniList list are posted to Discord forum threads, run from inside the app.
@@ -59,6 +60,14 @@ Tap **Log in with AniList** and approve. In the Android app the browser returns 
 ## Logo and splash screen
 
 The logo is `assets/logo-512.png` (and smaller copies). It is shown full screen for about a second when the app opens (see `#boot` in `index.html` and `SPLASH_MS` in `boot.js`), in the header, and on the login screen. The Android launcher icon and native splash are generated during the APK build from the pictures in `resources/` (step "Generate app icon and splash screen" in `.github/workflows/build-apk.yml`).
+
+## Builds and releases
+
+Every build of `.github/workflows/build-apk.yml` creates its own GitHub release (tag `v<app version>-b<build number>`, for example `v2.1.1-b14`) with the APK attached, so the newest build is always the newest release. The Android version code goes up with every build, so the installer offers Update instead of saying the version is already installed.
+
+The APK is signed with the key in `android-signing/debug.keystore` (the standard Android debug key, kept in the repo on purpose). Because the key never changes, a new APK installs over the old one and keeps your data. If you ever replace that file, the next APK has to be installed after uninstalling the old one. The `latest-apk` release from earlier builds is not used any more and can be deleted.
+
+When you upload `site.zip`, only the unpack workflow runs at first; it then starts the APK build, so one upload makes one release.
 
 ## Privacy
 

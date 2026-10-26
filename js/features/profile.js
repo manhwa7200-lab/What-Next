@@ -1,6 +1,6 @@
 /* js/features/profile.js: Profile screen (banner, avatar, counts, AniList stats, bio) */
 // ---------- Profile ----------
-let profLoaded = false;
+let profLoaded = false, profMe = null;
 const PROFILE_COLORS = { blue: "#3db4f2", purple: "#c063ff", pink: "#fc9dd6", orange: "#ef881a", red: "#e13333", green: "#4cca51", gray: "#677b94" };
 const PROFILE_KEY = "wn_profile";
 const fmtN = n => (n == null ? "–" : Number(n).toLocaleString());
@@ -17,15 +17,18 @@ function cleanAbout(t){
     .replace(/\n{3,}/g, "\n\n").trim();
 }
 
+// colour ring, banner picture and avatar for a profile card
+function profLook(card, bannerEl, avatarEl, v){
+  const col = v.options && v.options.profileColor, hex = PROFILE_COLORS[col] || (/^#[0-9a-f]{3,8}$/i.test(col || "") ? col : PROFILE_COLORS.blue);
+  card.style.setProperty("--pc", hex);
+  const banner = safeUrl(v.bannerImage); bannerEl.style.backgroundImage = banner ? "url(" + JSON.stringify(banner) + ")" : "";
+  const av = safeUrl(v.avatar && v.avatar.large); if(av){ avatarEl.src = av; avatarEl.hidden = false; }
+}
+
 function paintProfile(d){
   const v = d.v, st = v.statistics || {}, a = st.anime || {}, m = st.manga || {};
   $("#profName").textContent = v.name || state.user || "";
-  const col = v.options && v.options.profileColor, hex = PROFILE_COLORS[col] || (/^#[0-9a-f]{3,8}$/i.test(col || "") ? col : PROFILE_COLORS.blue);
-  $("#profile .pcard").style.setProperty("--pc", hex);
-  const banner = safeUrl(v.bannerImage), bn = $("#profBanner");
-  bn.style.backgroundImage = banner ? "url(" + JSON.stringify(banner) + ")" : "";
-  const av = safeUrl(v.avatar && v.avatar.large);
-  if(av){ $("#profAvatar").src = av; $("#profAvatar").hidden = false; }
+  profLook($("#profile .pcard"), $("#profBanner"), $("#profAvatar"), v);
   $("#profLink").href = safeUrl(v.siteUrl) || "https://anilist.co/user/" + encodeURIComponent(v.name || state.user || "");
   $("#pcAnime").textContent = fmtN(a.count); $("#pcManga").textContent = fmtN(m.count);
   $("#pcFollowing").textContent = fmtN(d.following); $("#pcFollowers").textContent = fmtN(d.followers);
@@ -56,7 +59,7 @@ async function renderProfile(){
     const v = json.data && json.data.Viewer;
     if(!v) throw new Error((json.errors && json.errors[0] && json.errors[0].message) || "No data");
     const d = { v, following: mine ? cached.following : null, followers: mine ? cached.followers : null };
-    paintProfile(d); profLoaded = true;
+    profMe = { id: v.id, name: v.name }; paintProfile(d); profLoaded = true;
     try{ localStorage.setItem(PROFILE_KEY, JSON.stringify(d)); }catch(_){}
     try{
       const r2 = await gql(FOLLOW_Q, { id: v.id }), j = r2.json.data;
@@ -68,3 +71,10 @@ async function renderProfile(){
   }
 }
 document.querySelectorAll("[data-go]").forEach(b => { b.onclick = () => showTab(b.dataset.go); });
+
+// the counts are buttons: Anime and Manga open your lists, Following and Followers open the people lists
+$("#pcAnimeBtn").onclick = () => showTab("anime");
+$("#pcMangaBtn").onclick = () => showTab("manga");
+for(const [id, mode] of [["#pcFollowingBtn", "following"], ["#pcFollowersBtn", "followers"]]) $(id).onclick = async () => {
+  try{ const uid = profMe ? profMe.id : await myId(); openUserList(mode, uid, state.user || savedName()); }catch(_){ toast("No connection. Try again."); }
+};

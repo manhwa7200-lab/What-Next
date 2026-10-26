@@ -1,0 +1,22 @@
+/* css/users.css: Followers / Following lists and other people's profiles */
+#user{z-index:26}
+.utop{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.utop h2{margin:0;font-size:1.35rem}
+.uback{min-width:44px;height:44px;border:0;border-radius:14px;background:var(--chip);color:var(--ink);font:inherit;font-size:1.2rem;font-weight:700;cursor:pointer}
+.ulist{display:flex;flex-direction:column;gap:10px}
+.ucard{display:flex;align-items:center;gap:14px;min-height:88px;padding:12px 8px 12px 14px;border-radius:18px;background:var(--card) center/cover no-repeat;box-shadow:var(--shadow);cursor:pointer;color:var(--ink)}
+.ucard.ub{color:#fff}
+.uav{width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid var(--line);background:var(--chip);flex:none}
+.uinfo{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.uname{font-weight:700;font-size:1.05rem;overflow-wrap:anywhere}
+.utag{flex:none;padding:5px 10px;border-radius:8px;background:#d9fbfb;color:#0d2a2a;font-weight:600;font-size:.82rem}
+.utag:empty{display:none}
+.ukebab{flex:none;background:none;border:0;color:inherit;font-size:1.5rem;line-height:1;padding:10px 12px;cursor:pointer}
+.uchips{display:flex;justify-content:center;gap:8px;margin:-2px 0 4px}
+.uacts{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:12px;padding:0 14px}
+.uact{padding:10px 16px;border:0;border-radius:999px;background:var(--chip);color:var(--ink);font:inherit;font-weight:700;cursor:pointer}
+.uact.pri{background:var(--grad);color:#fff}
+.uact:disabled{opacity:.6}
+.usheet{position:fixed;inset:0;z-index:40;display:flex;align-items:flex-end;background:rgba(0,0,0,.55)}
+.usheetbox{width:100%;max-height:80%;overflow:auto;padding:20px 18px calc(env(safe-area-inset-bottom,0px) + 18px);border-radius:24px 24px 0 0;background:var(--bg)}
+.usheetbox h3{margin:0 0 6px}

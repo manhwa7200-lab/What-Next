@@ -42,6 +42,10 @@ RMGRAPH = {1001: [("SOURCE", 5000), ("SEQUEL", 5002), ("SIDE_STORY", 5003), ("SI
     5000: [("ADAPTATION", 1001)], 5002: [("PREQUEL", 1001), ("SEQUEL", 5007)], 5003: [("PARENT", 1001)], 5004: [("PARENT", 1001)], 5005: [("PARENT", 1001)], 5006: [("ALTERNATIVE", 1001)],
     5007: [("PREQUEL", 5002)], 5010: [("SEQUEL", 1001), ("SIDE_STORY", 5011)], 5011: [("PARENT", 5010)], 5020: [("CHARACTER", 1001), ("CHARACTER", 5021)], 5021: [("CHARACTER", 5020)]}
 RMREQS = []
+FAKEUSERS = {301: {"id": 301, "name": "Moreaumi", "bannerImage": "https://img.test/c8.jpg", "isFollowing": True, "isFollower": True}, 302: {"id": 302, "name": "Orewatokyo720", "bannerImage": None, "isFollowing": True, "isFollower": True},
+    303: {"id": 303, "name": "Vaskim", "bannerImage": None, "isFollowing": False, "isFollower": True}, 304: {"id": 304, "name": "cloudberrypies", "bannerImage": None, "isFollowing": True, "isFollower": False}}
+FOLLOWERS = [301, 302, 303]; FOLLOWING = [304, 301, 302]
+FOLLOWS = []
 NET = {"off": False, "fail": 0, "delay": 0}
 
 def svg(n):
@@ -58,13 +62,28 @@ def handle(route, request):
         def ok(d): route.fulfill(status=200, content_type="application/json", body=json.dumps({"data": d}))
         if "MediaListCollection" in q:
             t = v.get("t", "ANIME"); es = DATA[t]
+            if v.get("u") and v["u"] != "Tester": es = [{**e, "score": min(100, e["score"] + (6 if i % 4 == 0 and e["score"] else 0))} for i, e in enumerate(es)]
             if "status_in" in q: es = [e for e in es if e["status"] in ("CURRENT", "REPEATING", "PLANNING")]
             full = [{**e, "media": {**e["media"]}} for e in es]
             return ok({"MediaListCollection": {"hasNextChunk": False, "lists": [{"entries": full}]}})
+        if "(userId:$id,sort:USERNAME)" in q:
+            ids = FOLLOWERS if "followers(userId" in q else FOLLOWING
+            return ok({"Page": {"pageInfo": {"hasNextPage": False}, ("followers" if "followers(userId" in q else "following"): [{**FAKEUSERS[i], "avatar": {"large": "https://img.test/c%d.jpg" % (i % 9)}} for i in ids]}})
+        if "User(name:$n)" in q:
+            u = next((x for x in FAKEUSERS.values() if x["name"].lower() == (v.get("n") or "").lower()), None)
+            return ok({"User": {"id": u["id"], "name": u["name"]} if u else None})
+        if "ToggleFollow" in q:
+            u = FAKEUSERS[v["id"]]; u["isFollowing"] = not u["isFollowing"]; FOLLOWS.append(v["id"])
+            return ok({"ToggleFollow": {"id": v["id"], "isFollowing": u["isFollowing"]}})
+        if "User(id:$id)" in q and "isFollowing" in q:
+            u = FAKEUSERS[v["id"]]
+            return ok({"User": {**u, "siteUrl": "https://anilist.co/user/" + u["name"], "about": "Hi, I am " + u["name"] + ". ~!spoiler!~", "avatar": {"large": "https://img.test/c%d.jpg" % (v["id"] % 9)}, "options": {"profileColor": "purple"},
+                "statistics": {"anime": {"count": 198, "episodesWatched": 8359, "minutesWatched": 199267, "meanScore": 93.88}, "manga": {"count": 26, "chaptersRead": 4942, "volumesRead": 254, "meanScore": 93.57}}}})
         if "followers(userId" in q or "following(userId" in q:
             if "$id:Int!" not in q.replace(" ", ""):   # AniList rejects a nullable Int where Int! is required
                 return route.fulfill(status=400, content_type="application/json", body=json.dumps({"errors": [{"message": "Variable \"$id\" of type \"Int\" used in position expecting type \"Int!\".", "status": 400}]}))
-            return ok({"fo": {"pageInfo": {"total": 7}}, "fe": {"pageInfo": {"total": 3}}})
+            tot = {301: (12, 9)}.get(v.get("id"), (7, 3))
+            return ok({"fo": {"pageInfo": {"total": tot[0]}}, "fe": {"pageInfo": {"total": tot[1]}}})
         if "Viewer{" in q and "bannerImage" in q:
             if NET.get("profileerr"): return route.fulfill(status=500, content_type="application/json", body=json.dumps({"errors": [{"message": "Too Many Requests", "status": 429}], "data": None}))
             return ok({"Viewer": {"id": 1, "name": "Tester", "siteUrl": "https://anilist.co/user/Tester", "about": "Just a normal hardcore otaku ~!hidden twist!~ img200(https://img.test/c7.jpg) [my list](https://anilist.co) " + "long bio text " * 30, "bannerImage": "https://img.test/c8.jpg", "avatar": {"large": "https://img.test/c9.jpg"}, "options": {"profileColor": "pink"},
@@ -83,7 +102,7 @@ def handle(route, request):
                     d["tags"] = [{"tag": {"name": "Shounen", "category": "Demographic"}, "count": 239 if anime else 73}, {"tag": {"name": "Seinen", "category": "Demographic"}, "count": 118 if anime else 76}, {"tag": {"name": "Shoujo", "category": "Demographic"}, "count": 53 if anime else 6}, {"tag": {"name": "Josei", "category": "Demographic"}, "count": 18 if anime else 1},
                                  {"tag": {"name": "Male Protagonist", "category": "Cast-Main Cast"}, "count": 300}, {"tag": {"name": "Harem", "category": "Theme-Romance"}, "count": 150}, {"tag": {"name": "Isekai", "category": "Setting-Universe"}, "count": 90}]
                 return d
-            return ok({"Viewer": {"statistics": {"anime": stat("anime"), "manga": stat("manga")}}})
+            return ok({("User" if "User(id:$id)" in q else "Viewer"): {"statistics": {"anime": stat("anime"), "manga": stat("manga")}}})
         if "rowOrder" in q and "mutation" not in q:
             return ok({"Viewer": {"options": {"disabledListActivity": [{"type": t, "disabled": d} for t, d in LISTOPT["act"].items()]}, "mediaListOptions": {"scoreFormat": LISTOPT["scoreFormat"], "rowOrder": LISTOPT["rowOrder"], "animeList": LISTOPT["animeList"], "mangaList": LISTOPT["mangaList"]}}})
         if "DeleteCustomList" in q:
@@ -153,6 +172,8 @@ def handle(route, request):
     if "img.test" in url:
         if NET["off"]: return route.abort("internetdisconnected")
         n = int(re.findall(r"c(\d+)", url)[0]) if re.findall(r"c(\d+)", url) else 0
+        if n == 8:
+            return route.fulfill(status=200, content_type="image/svg+xml", body='<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="400" viewBox="0 0 1900 400"><rect width="1900" height="400" fill="#2a3a5a"/><text x="950" y="120" font-size="110" font-weight="900" fill="#fff" text-anchor="middle">TOKYOVERSE</text><text x="950" y="230" font-size="48" fill="#ffd166" text-anchor="middle">MIDDLE LINE</text><text x="950" y="340" font-size="60" fill="#9be15d" text-anchor="middle">TRANSLATIONS</text></svg>')
         return route.fulfill(status=200, content_type="image/svg+xml", body=svg(n))
     if "localhost" in url or "127.0.0.1" in url: return route.continue_()
     return route.fulfill(status=204, body="")
